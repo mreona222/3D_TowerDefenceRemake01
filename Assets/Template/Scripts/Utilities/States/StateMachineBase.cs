@@ -25,8 +25,8 @@ namespace Template.Utility
 					m_currentState.OnExit();
 				}
 				m_currentState = m_nextState;
-				m_currentState.OnEnter();
 				m_nextState = null;
+				m_currentState.OnEnter();
 			}
 
 			if (m_currentState != null)

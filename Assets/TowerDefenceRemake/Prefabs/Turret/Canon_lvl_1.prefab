@@ -211,7 +211,6 @@ GameObject:
   - component: {fileID: 5159010447094182032}
   - component: {fileID: 485115425624453810}
   - component: {fileID: 2317164760939470046}
-  - component: {fileID: 526738277249163249}
   m_Layer: 0
   m_Name: Canon_lvl_1
   m_TagString: Untagged
@@ -306,23 +305,3 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
---- !u!114 &526738277249163249
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5155523601593371734}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 28c42802f98358e449fcd2bcce0d87c7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _anim: {fileID: 2317164760939470046}
-  _canFire: 1
-  _currentFirePower: 1
-  _currentFireSpan: 5
-  _layerMask:
-    serializedVersion: 2
-    m_Bits: 0
-  _currentRange: 0

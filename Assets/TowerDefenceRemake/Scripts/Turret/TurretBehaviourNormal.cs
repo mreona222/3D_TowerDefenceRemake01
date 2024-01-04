@@ -8,6 +8,8 @@ namespace TowerDefenseRemake.Turret
     {
         public override void Fire()
         {
+            base.Fire();
+
             FireAnimation();
         }
 
