@@ -1,15 +1,20 @@
 using DG.Tweening;
+using Sirenix.OdinInspector;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using TowerDefenseRemake.Interaction;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace TowerDefenseRemake.UI {
-    public class BaseButton : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerEnterHandler, IPointerExitHandler
+namespace TowerDefenseRemake.UI 
+{
+    public class BaseButton : MonoBehaviour, IInteractable
     {
+        [BoxGroup("Base")]
+        [SerializeField]
         protected bool _interactable = true;
         public bool Interactable
         {
@@ -27,84 +32,48 @@ namespace TowerDefenseRemake.UI {
             }
         }
 
+        [BoxGroup("Base")]
         [Space(10)]
         [SerializeField]
-        private BaseButton[] baseButtons;
+        private BaseButton[] buttons;
 
         private Image _image;
 
-        [Space(10)]
+
+
+        [BoxGroup("Color")]
         [SerializeField]
         Color _disableColor = new Color32(100, 100, 100, 200);
+
+        [BoxGroup("Color")]
         [SerializeField]
         Color _clickColor = new Color32(200, 0, 0, 255);
+
+        [BoxGroup("Color")]
         [SerializeField]
         Color _downColor = new Color32(255, 0, 0, 255);
+
+        [BoxGroup("Color")]
         [SerializeField]
         Color _enterColor = new Color32(0, 255, 0, 255);
+
+        [BoxGroup("Color")]
         [SerializeField]
         Color _exitColor = new Color32(255, 255, 255, 255);
-
-
-        // コールバック
-        protected Action onClick;
-        protected Action onDown;
-        protected Action onEnter;
-        protected Action onExit;
 
         private void Start()
         {
             _image = GetComponent<Image>();
-
-            onClick += OnClick;
-            onDown += OnDown;
-            onEnter += OnEnter;
-            onExit += OnExit;
         }
 
-        private void OnDestroy()
+        // ------------------------------------------------------------------------------------------------
+        // コールバック
+        // ------------------------------------------------------------------------------------------------
+        public virtual void OnPointerClick(PointerEventData eventData)
         {
-            onClick -= OnClick;
-            onDown -= OnDown;
-            onEnter -= OnEnter;
-            onExit -= OnExit;
-        }
+            if (Interactable) return;
 
-        void IPointerClickHandler.OnPointerClick(UnityEngine.EventSystems.PointerEventData eventData)
-        {
-            if (Interactable)
-            {
-                onClick.Invoke();
-            }
-        }
-
-        void IPointerDownHandler.OnPointerDown(UnityEngine.EventSystems.PointerEventData eventData)
-        {
-            if (Interactable)
-            {
-                onDown.Invoke();
-            }
-        }
-
-        void IPointerEnterHandler.OnPointerEnter(UnityEngine.EventSystems.PointerEventData eventData)
-        {
-            if (Interactable)
-            {
-                onEnter.Invoke();
-            }
-        }
-
-        void IPointerExitHandler.OnPointerExit(UnityEngine.EventSystems.PointerEventData eventData)
-        {
-            if (Interactable)
-            {
-                onExit.Invoke();
-            }
-        }
-
-        protected virtual void OnClick()
-        {
-            foreach (BaseButton button in baseButtons)
+            foreach (BaseButton button in buttons)
             {
                 button.Interactable = false;
             }
@@ -121,22 +90,10 @@ namespace TowerDefenseRemake.UI {
             }
         }
 
-        protected virtual void OnDown()
+        public virtual void OnPointerEnter(PointerEventData eventData)
         {
-            if (_image != null)
-            {
-                _image.color = _downColor;
-                DOVirtual
-                    .Float(1.1f, 0.9f, 0.1f, (value) =>
-                    {
-                        _image.GetComponent<RectTransform>().localScale = new Vector3(value, value, value);
-                    })
-                    .SetLink(gameObject);
-            }
-        }
+            if (Interactable) return;
 
-        protected virtual void OnEnter()
-        {
             if (_image != null)
             {
                 _image.color = _enterColor;
@@ -149,8 +106,10 @@ namespace TowerDefenseRemake.UI {
             }
         }
 
-        protected virtual void OnExit()
+        public virtual void OnPointerExit(PointerEventData eventData)
         {
+            if (Interactable) return;
+
             if (_image != null)
             {
                 _image.color = _exitColor;
@@ -161,6 +120,37 @@ namespace TowerDefenseRemake.UI {
                     })
                     .SetLink(gameObject);
             }
+        }
+
+        public virtual void OnDrag(PointerEventData eventData)
+        {
+            if (Interactable) return;
+        }
+
+        public virtual void OnPointerDown(PointerEventData eventData)
+        {
+            if (Interactable) return;
+
+            if (_image != null)
+            {
+                _image.color = _downColor;
+                DOVirtual
+                    .Float(1.1f, 0.9f, 0.1f, (value) =>
+                    {
+                        _image.GetComponent<RectTransform>().localScale = new Vector3(value, value, value);
+                    })
+                    .SetLink(gameObject);
+            }
+        }
+
+        public virtual void OnBeginDrag(PointerEventData eventData)
+        {
+            if (Interactable) return;
+        }
+
+        public virtual void OnEndDrag(PointerEventData eventData)
+        {
+            if (Interactable) return;
         }
     }
 }

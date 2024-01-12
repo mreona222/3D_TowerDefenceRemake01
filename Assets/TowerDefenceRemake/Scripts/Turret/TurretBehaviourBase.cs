@@ -1,28 +1,83 @@
 using Cysharp.Threading.Tasks;
+using Sirenix.OdinInspector;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TowerDefenseRemake.Construction;
 using TowerDefenseRemake.Damage;
+using TowerDefenseRemake.Grid;
+using TowerDefenseRemake.Interaction;
 using UniRx;
 using UniRx.Diagnostics;
 using UniRx.Triggers;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.EventSystems;
+using static UnityEngine.Rendering.DebugUI.Table;
 
 namespace TowerDefenseRemake.Turret
 {
-    public abstract class TurretBehaviourBase : MonoBehaviour
+    public abstract class TurretBehaviourBase : MonoBehaviour, IConstructable, IInteractable
     {
+        [BoxGroup("ステート")]
+        [SerializeField]
+        private bool _interactable = true;
+        public bool Interactable
+        {
+            get => _interactable;
+            set => _interactable = value;
+        }
+
+        [BoxGroup("ステート")]
+        [SerializeField]
+        private bool _constructed = true;
+        public bool Constructed
+        {
+            get => _constructed;
+            set => _constructed = value;
+        }
+
+        [BoxGroup("ステート")]
+        [SerializeField]
+        private bool _constructable;
+        public bool Constructable
+        {
+            get => _constructable;
+            set => _constructable = value;
+        }
+
+
+
+        [BoxGroup("レイ")]
+        [SerializeField]
+        LayerMask _cellMask = 1 << 9;
+        float _cellSize = 15.0f;
+
+        [BoxGroup("レイ")]
+        [SerializeField]
+        private ConstructMatrix _constructableMatrix;
+        public ConstructMatrix ConstructableMatrix
+        {
+            get => _constructableMatrix;
+        }
+
+        private List<GameObject> _prevCells = new List<GameObject>();
+
+
+
+        [BoxGroup("見た目")]
         [SerializeField]
         protected Animator _anim;
+
+        [BoxGroup("見た目")]
         [SerializeField]
         private Transform _appearance;
 
 
 
-        [Space(10)]
-        [Header("パラメーター")]
+
+        [BoxGroup("パラメーター")]
         [Tooltip("火力")]
         [SerializeField]
         private float _currentFirePower = 1.0f;
@@ -32,6 +87,7 @@ namespace TowerDefenseRemake.Turret
             set => _currentFirePower = value;
         }
 
+        [BoxGroup("パラメーター")]
         [Tooltip("スタン時間")]
         [SerializeField]
         private float _currentStanTime = 0;
@@ -41,6 +97,7 @@ namespace TowerDefenseRemake.Turret
             set => _currentStanTime = value;
         }
 
+        [BoxGroup("パラメーター")]
         [Tooltip("射撃間隔")]
         [SerializeField]
         private ReactiveProperty<float> _currentFireSpan = new ReactiveProperty<float>(5.0f);
@@ -50,6 +107,7 @@ namespace TowerDefenseRemake.Turret
             set => _currentFireSpan = value;
         }
 
+        [BoxGroup("パラメーター")]
         [Tooltip("範囲の大きさ")]
         [SerializeField]
         protected float _currentRange = 20.0f;
@@ -61,17 +119,7 @@ namespace TowerDefenseRemake.Turret
 
 
 
-        [Space(10)]
-        [Header("ターゲット")]
-        [Tooltip("ターゲットのレイヤー")]
-        [SerializeField]
-        protected LayerMask _layerMask = 1 << 7;
-
-        // ターゲットのList
-        private List<RaycastHit> _targetList = new List<RaycastHit>();
-        private RaycastHit _currentTarget = new RaycastHit();
-        private IDamageable _currentTargetInfo;
-
+        [BoxGroup("ターゲット")]
         [Tooltip("ターゲットの方を向いているか")]
         [SerializeField]
         private bool _lockOn = true;
@@ -80,6 +128,16 @@ namespace TowerDefenseRemake.Turret
             get => _lockOn;
             set => _lockOn = value;
         }
+
+        [BoxGroup("ターゲット")]
+        [Tooltip("ターゲットのレイヤー")]
+        [SerializeField]
+        protected LayerMask _enemyLayerMask = 1 << 7;
+
+        // ターゲットのList
+        private List<GameObject> _targetList = new List<GameObject>();
+        private GameObject _currentTarget = null;
+        private IDamageable _currentTargetInfo = null;
 
         // TODO:ScriptableObjectにステータスを保存
 
@@ -108,6 +166,18 @@ namespace TowerDefenseRemake.Turret
         }
 
         // ------------------------------------------------------------------------------------------
+        // Gizmos
+        // ------------------------------------------------------------------------------------------
+#if UNITY_EDITOR
+        private void OnDrawGizmosSelected()
+        {
+            // 範囲のGizmos
+            Gizmos.color = Color.blue;
+            Gizmos.DrawWireSphere(_appearance.position, CurrentRange);
+        }
+#endif
+
+        // ------------------------------------------------------------------------------------------
         // 射撃
         // ------------------------------------------------------------------------------------------
         public virtual void Fire()
@@ -130,34 +200,34 @@ namespace TowerDefenseRemake.Turret
             _anim.speed = 0;
         }
 
-        // TODO:削除
-        private void OnGUI()
-        {
-            GUILayout.Label($"{_targetList.Count}");
-        }
-
         // ------------------------------------------------------------------------------------------
         // ターゲット探索
         // ------------------------------------------------------------------------------------------
         protected virtual bool FindTarget()
         {
-            RaycastHit[] hits = Physics.SphereCastAll(_appearance.position, CurrentRange, Vector3.up, 0, _layerMask);
-
-            // ターゲットリストの中から今回見つからなかったターゲットを削除する
-            foreach (RaycastHit target in _targetList.ToArray())
+            // 衝突情報とゲームオブジェクト
+            RaycastHit[] hits = Physics.SphereCastAll(_appearance.position, CurrentRange, Vector3.up, 0, _enemyLayerMask);
+            List<GameObject> hitsGO = new List<GameObject>();
+            foreach(RaycastHit hit in hits)
             {
-                if (!hits.Contains(target))
+                hitsGO.Add(hit.collider.gameObject);
+            }
+
+            // ターゲットリストの中から今回も見つかったターゲットを追加する
+            foreach (GameObject target in _targetList.ToArray())
+            {
+                if (!hitsGO.Contains(target))
                 {
                     _targetList.Remove(target);
                 }
             }
 
             // 衝突情報から今回新しく見つかったターゲットを追加する
-            foreach (RaycastHit hit in hits)
+            foreach (GameObject hitGO in hitsGO)
             {
-                if (!_targetList.Contains(hit))
+                if (!_targetList.Contains(hitGO))
                 {
-                    _targetList.Add(hit);
+                    _targetList.Add(hitGO);
                 }
             }
 
@@ -167,15 +237,15 @@ namespace TowerDefenseRemake.Turret
             if (count)
             {
                 // ターゲットが変更されたとき
-                if (_currentTarget.collider != _targetList[0].collider)
+                if (_currentTarget != _targetList[0])
                 {
                     _currentTarget = _targetList[0];
-                    _currentTargetInfo = _currentTarget.collider.GetComponent<IDamageable>();
+                    _currentTargetInfo = _currentTarget.GetComponent<IDamageable>();
                 }
             }
             else
             {
-                _currentTarget = new RaycastHit();
+                _currentTarget = null;
                 _currentTargetInfo = null;
             }
 
@@ -200,14 +270,131 @@ namespace TowerDefenseRemake.Turret
         }
 
         // ------------------------------------------------------------------------------------------
-        // Gizmos
+        // Constructableインターフェース
         // ------------------------------------------------------------------------------------------
-#if UNITY_EDITOR
-        private void OnDrawGizmosSelected()
+        public void Construct()
         {
-            Gizmos.color = Color.blue;
-            Gizmos.DrawWireSphere(_appearance.position, CurrentRange);
+            Vector3 centerPos = new Vector3();
+
+            foreach (GameObject cell in RayCastCell())
+            {
+                centerPos += cell.transform.position;
+
+                GridCellBehaviour cellBehaviour = cell.GetComponent<GridCellBehaviour>();
+                cellBehaviour.ConstructableExist = true;
+            }
+
+            transform.position = centerPos / ConstructableMatrix.column / ConstructableMatrix.row + transform.up * _cellSize / 2;
         }
-#endif
+
+        public List<GameObject> RayCastCell()
+        {
+            List<GameObject> cellsGO = new List<GameObject>();
+
+            for (int j = 0; j < ConstructableMatrix.column; j++)
+            {
+                for (int i = 0; i < ConstructableMatrix.row; i++)
+                {
+                    Vector3 rayPos = transform.position + new Vector3(_cellSize / 2 * (-ConstructableMatrix.row + 1) + _cellSize * i, 0.5f, _cellSize / 2 * (ConstructableMatrix.column - 1) - _cellSize * j);
+
+                    if (Physics.Raycast(new Ray(rayPos, -transform.up), out RaycastHit hit, Mathf.Infinity, _cellMask))
+                    {
+                        cellsGO.Add(hit.collider.gameObject);
+                    }
+                }
+            }
+
+            return cellsGO;
+        }
+
+        public void UpdateConstructable()
+        {
+            List<GameObject> newCells = RayCastCell();
+            bool con = true;
+
+            // 更新がない場合
+            if (Enumerable.SequenceEqual(_prevCells, newCells))
+            {
+                con = Constructable;
+            }
+            // 更新がある場合
+            else
+            {
+                foreach(GameObject oldCell in _prevCells)
+                {
+                    GridCellBehaviour cellBehaviour = oldCell.GetComponent<GridCellBehaviour>();
+
+                    cellBehaviour.BrightenCell(Color.white, 1.0f);
+                }
+
+                _prevCells = newCells;
+
+                foreach (GameObject cell in newCells)
+                {
+                    GridCellBehaviour cellBehaviour = cell.GetComponent<GridCellBehaviour>();
+
+                    if (!cellBehaviour.ConstructableExist)
+                    {
+                        cellBehaviour.BrightenCell(cellBehaviour.InteractableColor, cellBehaviour.Intensity);
+                    }
+                    else
+                    {
+                        cellBehaviour.BrightenCell(cellBehaviour.UninteractableColor, cellBehaviour.Intensity);
+                        con = false;
+                    }
+                }
+            }
+
+            Constructable = con;
+        }
+
+        public void ChangeCellDefaultColor()
+        {
+            foreach (GameObject cell in RayCastCell())
+            {
+                GridCellBehaviour cellBehaviour = cell.GetComponent<GridCellBehaviour>();
+
+                cellBehaviour.BrightenCell(Color.white, 1.0f);
+            }
+        }
+        
+
+        // ------------------------------------------------------------------------------------------
+        // Interactableインターフェース
+        // ------------------------------------------------------------------------------------------
+        public virtual void OnPointerClick(PointerEventData eventData)
+        {
+            if (!Interactable) return;
+        }
+
+        public virtual void OnPointerEnter(PointerEventData eventData)
+        {
+            if (!Interactable) return;
+        }
+
+        public virtual void OnPointerExit(PointerEventData eventData)
+        {
+            if (!Interactable) return;
+        }
+
+        public virtual void OnDrag(PointerEventData eventData)
+        {
+            if (!Interactable) return;
+        }
+
+        public virtual void OnPointerDown(PointerEventData eventData)
+        {
+            if (!Interactable) return;
+        }
+
+        public virtual void OnBeginDrag(PointerEventData eventData)
+        {
+            if (!Interactable) return;
+        }
+
+        public virtual void OnEndDrag(PointerEventData eventData)
+        {
+            if (!Interactable) return;
+        }
     }
 }

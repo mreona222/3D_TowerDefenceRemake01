@@ -10,6 +10,7 @@ using TowerDefenseRemake.Damage;
 using UniRx;
 using UniRx.Diagnostics;
 using Sirenix.OdinInspector;
+using TowerDefenseRemake.Manager;
 
 namespace TowerDefenseRemake.Enemy
 {
@@ -21,7 +22,6 @@ namespace TowerDefenseRemake.Enemy
 
         private NavMeshAgent _agent;
 
-        [SerializeField]
         private Transform _target;
 
         [SerializeField]
@@ -60,8 +60,8 @@ namespace TowerDefenseRemake.Enemy
 
         [BoxGroup("パラメーター")]
         [SerializeField]
-        private ReactiveProperty<float> _currentHP = new ReactiveProperty<float>(200.0f);
-        public ReactiveProperty<float> CurrentHP
+        private float _currentHP = 200.0f;
+        public float CurrentHP
         {
             get => _currentHP;
             set => _currentHP = value;
@@ -82,16 +82,6 @@ namespace TowerDefenseRemake.Enemy
             _anim = GetComponent<Animator>();
             _agent = GetComponent<NavMeshAgent>();
 
-            // HPが0でDie
-            CurrentHP
-                .Where(x => x <= 0)
-                .Subscribe(_ =>
-                {
-                    ChangeState2Die();
-                    IsDead = true;
-                })
-                .AddTo(this);
-
             // ノックバック
             _isNockBacking
                 .Where(x => x)
@@ -104,6 +94,17 @@ namespace TowerDefenseRemake.Enemy
                 .AddTo(this);
         }
 
+        public void SetTarget(Transform tf)
+        {
+            _target = tf;
+        }
+
+        private void SetAnimation(int number, float speed)
+        {
+            _anim.SetInteger("State", number);
+            _anim.speed = speed;
+        }
+
         // -------------------------------------------------------------------------------------
         // Idle
         // -------------------------------------------------------------------------------------
@@ -113,7 +114,7 @@ namespace TowerDefenseRemake.Enemy
         public virtual void OnEnterIdle()
         {
             // アニメーション
-            _anim.SetInteger("State", 0);
+            SetAnimation(0, 1.0f);
 
             // 歩きの速度
             _agent.speed = 0;
@@ -143,7 +144,7 @@ namespace TowerDefenseRemake.Enemy
         public virtual void OnEnterMove()
         {
             // アニメーション
-            _anim.SetInteger("State", 1);
+            SetAnimation(1, 1.0f);
 
             // 歩きの速度
             _agent.speed = CurrentMoveSpeed;
@@ -167,7 +168,7 @@ namespace TowerDefenseRemake.Enemy
 
         public virtual void ApplyDamage(float damage, float stanTime)
         {
-            if(CurrentHP.Value > 0)
+            if(CurrentHP > 0)
             {
                 ChangeState2Damage(damage, stanTime);
             }
@@ -179,13 +180,20 @@ namespace TowerDefenseRemake.Enemy
             _agent.speed = 0;
 
             // ダメージ
-            CurrentHP.Value -= damage;
+            CurrentHP -= damage;
+
+            // 生存確認
+            if(CurrentHP <= 0)
+            {
+                ChangeState2Die();
+                IsDead = true;
+            }
 
             // ノックバック
             if (!_isNockBacking.Value)
             {
                 // アニメーション
-                _anim.SetInteger("State", 2);
+                SetAnimation(2, 1.0f);
 
                 _isNockBacking.Value = true;
             }
@@ -226,12 +234,32 @@ namespace TowerDefenseRemake.Enemy
         public virtual void OnEnterDie()
         {
             // アニメーション
-            _anim.SetInteger("State", 3);
+            SetAnimation(3, 1.0f);
 
             // 歩きの速度
             _agent.speed = 0;
+
+            // 削除
+            Destroy(gameObject, 3.0f);
         }
 
         public abstract void ChangeState2Die();
+
+        // -------------------------------------------------------------------------------------
+        // ReachGoal
+        // -------------------------------------------------------------------------------------
+        public virtual void OnEnterReachGoal()
+        {
+            // アニメーション
+            SetAnimation(4, 1.0f);
+
+            // 歩きの速度
+            _agent.speed = 0;
+
+            // 削除
+            Destroy(gameObject, 3.0f);
+        }
+
+        public abstract void ChangeState2ReachGoal();
     }
 }

@@ -18,6 +18,7 @@ namespace TowerDefenseRemake.Manager
         {
             Title,
             Menu,
+            Battle01,
 
         }
 
@@ -58,14 +59,17 @@ namespace TowerDefenseRemake.Manager
         {
             // ローディング画面生成
             loadingScreen.gameObject.SetActive(true);
+            // フェードアウトルール画像
             loadingScreen.MaskTexture = ruleImage[(int)fadeout];
 
             // フェードアウトアニメーション
-            await DOVirtual.Float(0, 1.0f, 0.5f, value => 
-            {
-                ((IFade)loadingScreen).Range = value;
-            })
+            await
+                DOVirtual.Float(0, 1.0f, 0.5f, value =>
+                {
+                    ((IFade)loadingScreen).Range = value;
+                })
                 //.SetEase(Ease.OutQuint)
+                .SetLink(gameObject)
                 .AsyncWaitForCompletion();
         }
 
@@ -75,13 +79,17 @@ namespace TowerDefenseRemake.Manager
         /// <param name="fadein">ルール画像</param>
         private async UniTask FadeIn(RuleImage fadein)
         {
-            // フェードイン
+            // フェードインルール画像
             loadingScreen.MaskTexture = ruleImage[(int)fadein];
-            await DOVirtual.Float(1.0f, 0, 0.5f, value => 
-            {
-                ((IFade)loadingScreen).Range = value; 
-            })
+
+            // フェードインアニメーション
+            await
+                DOVirtual.Float(1.0f, 0, 0.5f, value =>
+                {
+                    ((IFade)loadingScreen).Range = value;
+                })
                 //.SetEase(Ease.InQuint)
+                .SetLink(gameObject)
                 .AsyncWaitForCompletion();
 
             // ローディング画面消去
@@ -93,41 +101,6 @@ namespace TowerDefenseRemake.Manager
         // -----------------------------------------------------------------------------------------------------
         // シーン遷移
         // -----------------------------------------------------------------------------------------------------
-
-        /// <summary>
-        /// ロード付きでシーン遷移
-        /// </summary>
-        /// <param name="fadeout">フェードアウトルール画像</param>
-        /// <param name="fadein">フェードインルール画像</param>
-        /// <param name="scene">シーン先のシーン</param>
-        /// <param name="initialize">初期化処理</param>
-        /// <returns></returns>
-        //public async UniTask LoadSceneWithLoading(int fadeout, int fadein, string scene, System.Func<UniTask> initialize, System.Action afterLoad)
-        //{
-        //    // フェードアウト
-        //    //GameObject loadingScreenInstance = await FadeOut(fadeout);
-        //    await FadeOut(fadeout);
-
-        //    // シーン遷移
-        //    await SceneManager.LoadSceneAsync(scene);
-
-        //    // 初期化処理
-        //    if (initialize != null)
-        //    {
-        //        await initialize();
-        //    }
-
-        //    // フェードイン
-        //    //await FadeIn(fadein, loadingScreenInstance);
-        //    await FadeIn(fadein);
-
-        //    // シーン遷移後
-        //    if (afterLoad != null)
-        //    {
-        //        afterLoad();
-        //    }
-        //}
-
         public async UniTask LoadingSceneWithLoading(RuleImage fadeout ,RuleImage fadein, Scenes scene, System.Func<UniTask> initialize)
         {
             // フェードアウト

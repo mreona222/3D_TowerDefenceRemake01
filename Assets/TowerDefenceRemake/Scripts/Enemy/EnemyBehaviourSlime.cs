@@ -15,6 +15,7 @@ namespace TowerDefenseRemake.Enemy
             Move,
             Damage,
             Die,
+            ReachGoal,
         }
         [SerializeField]
         private SlimeState _currentState;
@@ -48,7 +49,8 @@ namespace TowerDefenseRemake.Enemy
 
         public override void ChangeState2Idle()
         {
-            if (_currentState == SlimeState.Die) return;
+            if (_currentState == SlimeState.Die || 
+                _currentState == SlimeState.ReachGoal) return;
 
             ChangeState(new EnemyBehaviourSlime.Idle(this));
         }
@@ -76,7 +78,8 @@ namespace TowerDefenseRemake.Enemy
 
         public override void ChangeState2Move()
         {
-            if (_currentState == SlimeState.Die) return;
+            if (_currentState == SlimeState.Die || 
+                _currentState == SlimeState.ReachGoal) return;
 
             ChangeState(new EnemyBehaviourSlime.Move(this));
         }
@@ -109,7 +112,8 @@ namespace TowerDefenseRemake.Enemy
 
         public override void ChangeState2Damage(float damage, float stanTime)
         {
-            if (_currentState == SlimeState.Die) return;
+            if (_currentState == SlimeState.Die || 
+                _currentState == SlimeState.ReachGoal) return;
 
             ChangeState(new EnemyBehaviourSlime.Damage(this, damage, stanTime));
         }
@@ -132,9 +136,35 @@ namespace TowerDefenseRemake.Enemy
 
         public override void ChangeState2Die()
         {
-            if (_currentState == SlimeState.Die) return;
+            if (_currentState == SlimeState.Die ||
+                _currentState == SlimeState.ReachGoal) return;
 
             ChangeState(new EnemyBehaviourSlime.Die(this));
         }
+
+        // -------------------------------------------------------------------------------------
+        // ReachGoal
+        // -------------------------------------------------------------------------------------
+        private class ReachGoal : StateBase<EnemyBehaviourBase>
+        {
+            public ReachGoal(EnemyBehaviourBase _machine) : base(_machine)
+            {
+            }
+
+            public override void OnEnter()
+            {
+                ((EnemyBehaviourSlime)machine)._currentState = SlimeState.ReachGoal;
+                ((EnemyBehaviourSlime)machine).OnEnterReachGoal();
+            }
+        }
+
+        public override void ChangeState2ReachGoal()
+        {
+            if (_currentState == SlimeState.Die ||
+                _currentState == SlimeState.ReachGoal) return;
+
+            ChangeState(new EnemyBehaviourSlime.ReachGoal(this));
+        }
+
     }
 }

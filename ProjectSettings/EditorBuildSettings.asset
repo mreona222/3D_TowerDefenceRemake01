@@ -12,6 +12,6 @@ EditorBuildSettings:
     path: Assets/TowerDefenceRemake/Scenes/Menu.unity
     guid: 3deb60ea829cab2448b78adca996357a
   - enabled: 1
-    path: Assets/TowerDefenceRemake/Scenes/Game01.unity
+    path: Assets/TowerDefenceRemake/Scenes/Battle01.unity
     guid: 2b993abfe6de5344f8006fbd188494c9
   m_configObjects: {}

@@ -13,15 +13,12 @@ namespace TowerDefenseRemake.Grid
     public class GridCellGenerator : MonoBehaviour
     {
         [SerializeField]
-        private GameObject _gridCell;
-
-        [SerializeField]
         private int row, column;
 
+#if UNITY_EDITOR
         [Button]
         public void GenerateGridCell()
         {
-#if UNITY_EDITOR
             //if (_gridCellInst.Count != 0)
             //{
             //    foreach(GameObject go in _gridCellInst)
@@ -33,23 +30,22 @@ namespace TowerDefenseRemake.Grid
 
             DestroyAllCells();
 
-            _gridCell = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TowerDefenceRemake/Prefabs/Grid/Grid.prefab");
+            GameObject gridCell = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TowerDefenceRemake/Prefabs/Grid/Grid.prefab");
 
-            for (int i = 0; i < column; i++)
+            for (int j = 0; j < column; j++)
             {
-                for (int j = 0; j < row; j++)
+                for (int i = 0; i < row; i++)
                 {
-                    GameObject go = (GameObject)PrefabUtility.InstantiatePrefab(_gridCell);
+                    GameObject go = (GameObject)PrefabUtility.InstantiatePrefab(gridCell);
 
                     go.transform.position = new Vector3(
-                            _gridCell.transform.localScale.x / 2 * (-row + 1) + _gridCell.transform.localScale.x * j,
+                            gridCell.transform.localScale.x / 2 * (-row + 1) + gridCell.transform.localScale.x * i,
                             transform.position.y,
-                            _gridCell.transform.localScale.z / 2 * (column - 1) - _gridCell.transform.localScale.z * i);
+                            gridCell.transform.localScale.z / 2 * (column - 1) - gridCell.transform.localScale.z * j);
 
                     go.transform.SetParent(transform, true);
                 }
             }
-#endif
         }
 
         private void DestroyAllCells()
@@ -66,5 +62,6 @@ namespace TowerDefenseRemake.Grid
                 DestroyImmediate(obj);
             }
         }
+#endif
     }
 }

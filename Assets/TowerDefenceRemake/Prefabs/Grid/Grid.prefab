@@ -12,9 +12,9 @@ GameObject:
   - component: {fileID: 8886214256639503169}
   - component: {fileID: 4793419119479518896}
   - component: {fileID: 5141824239486780380}
-  - component: {fileID: 8184058356083561695}
   - component: {fileID: 2640036904895535288}
-  m_Layer: 0
+  - component: {fileID: 8184058356083561695}
+  m_Layer: 9
   m_Name: Grid
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -64,8 +64,8 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9a29b2e3d770a61409f63fc3824526f7, type: 2}
-  - {fileID: 2100000, guid: 459243b0cae22f34f89a5e12987967a4, type: 2}
+  - {fileID: 0}
+  - {fileID: 0}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -108,24 +108,6 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &8184058356083561695
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3050724091755258763}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 917ca7752e1b36f4aac6ead729630d65, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _interactable: 0
-  _N: 0
-  _S: 0
-  _E: 0
-  _W: 0
-  _constructableExist: 0
 --- !u!114 &2640036904895535288
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -145,3 +127,23 @@ MonoBehaviour:
   m_IgnoreFromBuild: 0
   m_ApplyToChildren: 1
   m_AffectedAgents: ffffffff
+--- !u!114 &8184058356083561695
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3050724091755258763}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 917ca7752e1b36f4aac6ead729630d65, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _constructableExist: 0
+  _interactableColor: {r: 0, g: 1, b: 0, a: 1}
+  _uninteractableColor: {r: 1, g: 0, b: 0, a: 1}
+  _intensity: 15
+  _type: 0
+  _roadDirection: []
+  _startDirection: 
+  _goalDirection: 

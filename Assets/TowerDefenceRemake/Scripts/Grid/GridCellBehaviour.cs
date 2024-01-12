@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using System.Linq;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -10,42 +11,87 @@ using UnityEditor;
 
 namespace TowerDefenseRemake.Grid
 {
-    [ExecuteAlways]
-    public class GridCellBehaviour : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
+    public enum CellType
     {
-        private MeshRenderer _MR;
-        //private Material _mat[0];
-        //private Material _outlineMaterial;
+        None,
+        Road,
+        Garden,
+        Start,
+        Goal,
+    }
 
-        private Material[] _mat;
-
-        [Space(10)]
+    [ExecuteAlways]
+    public class GridCellBehaviour : MonoBehaviour
+    {
+        [BoxGroup("ステート")]
         [SerializeField]
-        [PropertyOrder(0)]
-        [OnValueChanged(nameof(OnChangeGridType))]
-        private bool _interactable;
-
-        public bool Interactable
-        {
-            get => _interactable;
-            set => _interactable = value;
-        }
-
-        [SerializeField]
-        [ShowIf("@!Interactable")]
-        [PropertyOrder(1)]
-        [OnValueChanged(nameof(OnChangeRoadDirection))]
-        private bool _N, _S, _E, _W;
-
-        [Space(10)]
-        [SerializeField]
-        [PropertyOrder(2)]
         private bool _constructableExist;
         public bool ConstructableExist
         {
             get => _constructableExist;
             set => _constructableExist = value;
         }
+
+
+
+        private enum CellMat
+        {
+            Road,
+            Outline,
+        }
+
+        [BoxGroup("見た目")]
+        [SerializeField]
+        private Color _interactableColor = Color.green;
+        public Color InteractableColor => _interactableColor;
+
+        [BoxGroup("見た目")]
+        [SerializeField]
+        private Color _uninteractableColor = Color.red;
+        public Color UninteractableColor => _uninteractableColor;
+
+        [BoxGroup("見た目")]
+        [SerializeField]
+        private float _intensity = 25.0f;
+        public float Intensity => _intensity;
+
+        private MeshRenderer _MR;
+        private Material[] _mat;
+
+
+
+
+        [BoxGroup("タイプ")]
+        [SerializeField]
+        [EnumToggleButtons]
+        [OnValueChanged(nameof(OnChangeGridType))]
+        private CellType _type = CellType.None;
+
+        private readonly static string[] Direction = { "N", "S", "E", "W" };
+
+        [BoxGroup("タイプ")]
+        [SerializeField]
+        [ShowIf(nameof(_type), CellType.Road)]
+        [ValueDropdown(nameof(Direction), IsUniqueList = true)]
+        [OnValueChanged(nameof(OnChangeRoadDirection))]
+        private string[] _roadDirection;
+
+        [BoxGroup("タイプ")]
+        [SerializeField]
+        [ShowIf(nameof(_type), CellType.Start)]
+        [ValueDropdown(nameof(Direction))]
+        [OnValueChanged(nameof(OnChangeStartDirection))]
+        private string _startDirection;
+
+        [BoxGroup("タイプ")]
+        [SerializeField]
+        [ShowIf(nameof(_type), CellType.Goal)]
+        [ValueDropdown(nameof(Direction))]
+        [OnValueChanged(nameof(OnChangeGoalDirection))]
+        private string _goalDirection;
+
+
+
 
         private void Start()
         {
@@ -99,47 +145,12 @@ namespace TowerDefenseRemake.Grid
             }
         }
 
-        // ------------------------------------------------------------------------
-        // コールバック
-        // ------------------------------------------------------------------------
-        void IPointerClickHandler.OnPointerClick(UnityEngine.EventSystems.PointerEventData eventData)
+        public void BrightenCell(Color color, float intensity)
         {
-            if (_N || _S || _E || _W)
-            {
-                _N = false;
-                _S = false;
-                _E = false;
-                _W = false;
-            }
-
-            if (!Interactable) return;
-
-            // UI表示
-
+            _mat[(int)CellMat.Outline].SetColor("_OutlineColor", color * intensity);
         }
 
-        void IPointerEnterHandler.OnPointerEnter(UnityEngine.EventSystems.PointerEventData eventData)
-        {
-            if (Interactable)
-            {
-                // Grid強調表示Interactable
 
-                _mat[1].SetColor("_OutlineColor", Color.green * 20.0f);
-            }
-            else
-            {
-                // Grid強調表示Uninteractable
-
-                _mat[1].SetColor("_OutlineColor", Color.red * 20.0f);
-            }
-        }
-
-        void IPointerExitHandler.OnPointerExit(UnityEngine.EventSystems.PointerEventData eventData)
-        {
-            // Grid強調表示OFF
-
-            _mat[1].SetColor("_OutlineColor", Color.white);
-        }
 
         // ---------------------------------
         // Editor
@@ -150,29 +161,58 @@ namespace TowerDefenseRemake.Grid
         /// </summary>
         void OnChangeGridType()
         {
-            if (Interactable)
+            // リセット
+            for(int i = 0; i < transform.childCount; i++)
             {
-                gameObject.layer = LayerMask.NameToLayer("Default");
-
-                // 道を非表示
-                _N = false;
-                _S = false;
-                _E = false;
-                _W = false;
-                if (_mat[0] != null)
-                {
-                    _mat[0].SetFloat("_N", 0);
-                    _mat[0].SetFloat("_S", 0);
-                    _mat[0].SetFloat("_E", 0);
-                    _mat[0].SetFloat("_W", 0);
-                }
+                DestroyImmediate(transform.GetChild(i).gameObject);
             }
-            else
+            _mat[(int)CellMat.Road].SetFloat("_N", 0);
+            _mat[(int)CellMat.Road].SetFloat("_S", 0);
+            _mat[(int)CellMat.Road].SetFloat("_E", 0);
+            _mat[(int)CellMat.Road].SetFloat("_W", 0);
+
+            // 初期設定
+            switch (_type)
             {
-                gameObject.layer = LayerMask.NameToLayer("Default");
+                case CellType.None:
+                    // レイヤーをNotRoadに変更
+                    gameObject.layer = LayerMask.NameToLayer("NotRoad");
+                    // インタラクト
+                    ConstructableExist = false;
+                    break;
+                case CellType.Road:
+                    // レイヤーをRoadに変更
+                    gameObject.layer = LayerMask.NameToLayer("Road");
+                    // インタラクト
+                    ConstructableExist = true;
+                    OnChangeRoadDirection();
+                    break;
+                case CellType.Garden:
+                    // TODO:Garden生成
 
-                // お花畑表示
+                    // レイヤーをNotRoadに変更
+                    gameObject.layer = LayerMask.NameToLayer("NotRoad");
+                    // インタラクト
+                    ConstructableExist = true;
+                    break;
+                case CellType.Start:
+                    // TODO:Spawner生成
 
+                    // レイヤーをNotRoadに変更
+                    gameObject.layer = LayerMask.NameToLayer("NotRoad");
+                    // インタラクト
+                    ConstructableExist = true;
+                    OnChangeStartDirection();
+                    break;
+                case CellType.Goal:
+                    // TODO:Goal生成
+
+                    // レイヤーをNotRoadに変更
+                    gameObject.layer = LayerMask.NameToLayer("NotRoad");
+                    // インタラクト
+                    ConstructableExist = true;
+                    OnChangeGoalDirection();
+                    break;
             }
         }
 
@@ -182,32 +222,52 @@ namespace TowerDefenseRemake.Grid
         void OnChangeRoadDirection()
         {
             // 道を表示
-            if (_N) { _mat[0].SetFloat("_N", 1.0f); }
-            else { _mat[0].SetFloat("_N", 0); }
+            if (_roadDirection.Contains("N")) { _mat[(int)CellMat.Road].SetFloat("_N", 1.0f); }
+            else { _mat[(int)CellMat.Road].SetFloat("_N", 0); }
 
-            if (_S) { _mat[0].SetFloat("_S", 1.0f); }
-            else { _mat[0].SetFloat("_S", 0); }
+            if (_roadDirection.Contains("S")) { _mat[(int)CellMat.Road].SetFloat("_S", 1.0f); }
+            else { _mat[(int)CellMat.Road].SetFloat("_S", 0); }
 
-            if (_E) { _mat[0].SetFloat("_E", 1.0f); }
-            else { _mat[0].SetFloat("_E", 0); }
+            if (_roadDirection.Contains("E")) { _mat[(int)CellMat.Road].SetFloat("_E", 1.0f); }
+            else { _mat[(int)CellMat.Road].SetFloat("_E", 0); }
 
-            if (_W) { _mat[0].SetFloat("_W", 1.0f); }
-            else { _mat[0].SetFloat("_W", 0); }
+            if (_roadDirection.Contains("W")) { _mat[(int)CellMat.Road].SetFloat("_W", 1.0f); }
+            else { _mat[(int)CellMat.Road].SetFloat("_W", 0); }
+        }
 
-            // 東西南北に道が伸びているとき
-            if (_N || _S || _E || _W)
+        void OnChangeStartDirection()
+        {
+            switch (_startDirection)
             {
-                // レイヤーをRoadに変更
-                gameObject.layer = LayerMask.NameToLayer("Road");
+                case "N":
+                    break;       
+                case "S":
+                    break;
+                case "E":
+                    break;
+                case "W":
+                    break;
+                default:
+                    break;
             }
-            // 道がないとき
-            else
+        }
+
+        void OnChangeGoalDirection()
+        {
+            switch (_goalDirection)
             {
-                gameObject.layer = LayerMask.NameToLayer("Default");
-
-                // お花畑を表示
-
-
+                case "N":
+                    break;
+                case "S":
+                    break;
+                case "E":
+                    break;
+                case "W":
+                    break;
+                case "None":
+                    break;
+                default:
+                    break;
             }
         }
     }

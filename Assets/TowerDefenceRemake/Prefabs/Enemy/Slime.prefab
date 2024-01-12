@@ -428,7 +428,7 @@ GameObject:
   - component: {fileID: 3325644128226099652}
   - component: {fileID: 5974545407226195988}
   m_Layer: 7
-  m_Name: SlimePBR
+  m_Name: Slime
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -514,7 +514,7 @@ NavMeshAgent:
   m_Height: 2
   m_BaseOffset: 0
   m_WalkableMask: 1
-  m_ObstacleAvoidanceType: 4
+  m_ObstacleAvoidanceType: 0
 --- !u!114 &5974545407226195988
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -527,13 +527,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d86e75b01d42f0c4d894f2588383e261, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _target: {fileID: 0}
   _collider:
   - {fileID: 4921210972795215109}
   _isNockBacking:
     value: 0
   _isDead: 0
-  _currentHP:
-    value: 20000
+  _currentHP: 150
   _currentMoveSpeed: 10
   _currentState: 0

@@ -2,14 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using TowerDefenseRemake.Manager;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace TowerDefenseRemake.UI
 {
     public class QuitGameButton : BaseButton
     {
-        protected override void OnClick()
+        public override void OnPointerClick(PointerEventData eventData)
         {
-            base.OnClick();
+            base.OnPointerClick(eventData);
 
             SceneTransitionManager.Instance.QuitGame();
         }

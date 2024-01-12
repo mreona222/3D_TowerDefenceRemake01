@@ -14,18 +14,19 @@ namespace TowerDefenseRemake.Manager
         {
             Title,
             Menu,
+            Battle,
         }
 
         public GameState currentState;
 
         public static event Action<GameState> OnGameStateChanged;
 
-        public BaseInstanceManager instanceManager;
+        public BaseInstanceManager _IM;
 
         private void OnEnterGameState(GameState newState)
         {
             // シーンごとのマネージャーを取得
-            instanceManager = FindObjectOfType<BaseInstanceManager>();
+            _IM = FindObjectOfType<BaseInstanceManager>();
 
             switch (newState)
             {
@@ -39,7 +40,7 @@ namespace TowerDefenseRemake.Manager
         private void OnExitGameState(GameState prevState)
         {
             // シーンごとのマネージャーを破棄
-            instanceManager = null;
+            _IM = null;
 
             switch (prevState)
             {
