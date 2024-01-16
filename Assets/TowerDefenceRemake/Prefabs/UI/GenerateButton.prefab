@@ -95,9 +95,8 @@ MonoBehaviour:
   _downColor: {r: 1, g: 0, b: 0, a: 1}
   _enterColor: {r: 0, g: 1, b: 0, a: 1}
   _exitColor: {r: 1, g: 1, b: 1, a: 1}
-  Type: 0
   _turretList: {fileID: 11400000, guid: abe4ca23d1ed9bd4cb4d283474a8b2d1, type: 2}
   _cellLayerMask:
     serializedVersion: 2
     m_Bits: 768
-  changeScrollDragThreshold: 10
+  changeScrollDragThreshold: 75

@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: GridOutline
+  m_Name: CellOutline
   m_Shader: {fileID: -6465566751694194690, guid: 64a5fb876411e42459b6fd83089c2566,
     type: 3}
   m_Parent: {fileID: 0}
@@ -103,7 +103,7 @@ Material:
     - _GlossyReflections: 0
     - _Metallic: 0
     - _OcclusionStrength: 1
-    - _Outline: 0.95
+    - _Outline: 0.92
     - _Parallax: 0.005
     - _QueueControl: 0
     - _QueueOffset: 0

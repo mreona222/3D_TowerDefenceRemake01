@@ -12,6 +12,7 @@ namespace TowerDefenseRemake.UI
         {
             base.OnPointerClick(eventData);
 
+            // 処理
             SceneTransitionManager.Instance.QuitGame();
         }
     }

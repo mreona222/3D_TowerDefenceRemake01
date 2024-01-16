@@ -15,18 +15,6 @@ namespace TowerDefenseRemake.Construction
         public int column;
     }
 
-    public struct Constructable
-    {
-        public bool constructable;
-        public Vector3 center;
-
-        public Constructable(bool constructable, Vector3 center)
-        {
-            this.constructable = constructable;
-            this.center = center;
-        }
-    }
-
 
 
     public interface IConstructable

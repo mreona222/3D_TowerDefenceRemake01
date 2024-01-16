@@ -16,6 +16,7 @@ namespace TowerDefenseRemake.UI
         {
             base.OnPointerClick(eventData);
 
+            // 処理
             UniTask.Create(async () =>
             {
                 await SceneTransitionManager.Instance.LoadingSceneWithLoading(SceneTransitionManager.RuleImage.linear_invert, SceneTransitionManager.RuleImage.linear, menu, async () =>

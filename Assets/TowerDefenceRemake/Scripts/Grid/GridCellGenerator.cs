@@ -30,7 +30,7 @@ namespace TowerDefenseRemake.Grid
 
             DestroyAllCells();
 
-            GameObject gridCell = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TowerDefenceRemake/Prefabs/Grid/Grid.prefab");
+            GameObject gridCell = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TowerDefenceRemake/Prefabs/Cell/CellCore.prefab");
 
             for (int j = 0; j < column; j++)
             {

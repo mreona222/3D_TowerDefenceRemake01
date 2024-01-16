@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using TowerDefenseRemake.Grid;
 using TowerDefenseRemake.Turret;
 using UnityEngine;
 
@@ -16,8 +17,12 @@ namespace TowerDefenseRemake.UI
         [SerializeField]
         private Transform _content;
 
+        GridCellBehaviour[] _allCells;
+
         private void Start()
         {
+            _allCells = FindObjectsOfType<GridCellBehaviour>();
+
             GenerateButtons();
         }
 
@@ -25,9 +30,42 @@ namespace TowerDefenseRemake.UI
         {
             for (int i = 0; i < System.Enum.GetValues(typeof(TurretType)).Length; i++)
             {
+                // ボタンを生成
                 GenerateTurretButton buttonInst = Instantiate(_generateButtonPrefab, _content);
                 buttonInst.Type = (TurretType)i;
-                buttonInst.Handle = _handle;
+
+                // ドラッグ開始コールバック
+                buttonInst.SetCallbackOnEnterDrag(() =>
+                {
+                    // メニューを非表示
+                    if (_handle != null)
+                    {
+                        _handle.HideMenu();
+                    }
+
+                    // セルを光らせる
+                    foreach (GridCellBehaviour cell in _allCells)
+                    {
+                        if (cell.ConstructableExist)
+                        {
+                            cell.ChangeOutlineExistColor();
+                        }
+                        else
+                        {
+                            cell.ChangeOutlineUnExistColor();
+                        }
+                    }
+                });
+
+                // ドラッグ終了コールバック
+                buttonInst.SetCallbackOnExitDrag(() =>
+                {
+                    // セルをデフォルトカラーに
+                    foreach (GridCellBehaviour cell in _allCells)
+                    {
+                        cell.ChangeOutlineDefaultColor();
+                    }
+                });
             }
         }
     }

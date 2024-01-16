@@ -42,22 +42,24 @@ namespace TowerDefenseRemake.Grid
 
         [BoxGroup("見た目")]
         [SerializeField]
-        private Color _interactableColor = Color.green;
-        public Color InteractableColor => _interactableColor;
+        private Color _constructableUnExistColor = Color.green;
 
         [BoxGroup("見た目")]
         [SerializeField]
-        private Color _uninteractableColor = Color.red;
-        public Color UninteractableColor => _uninteractableColor;
+        private Color _constructableExistColor = Color.red;
 
         [BoxGroup("見た目")]
         [SerializeField]
         private float _intensity = 25.0f;
-        public float Intensity => _intensity;
 
         private MeshRenderer _MR;
         private Material[] _mat;
 
+        private GameObject _childGameObject;
+
+        [BoxGroup("見た目")]
+        [SerializeField]
+        private ParticleSystem _cellCenter;
 
 
 
@@ -145,13 +147,6 @@ namespace TowerDefenseRemake.Grid
             }
         }
 
-        public void BrightenCell(Color color, float intensity)
-        {
-            _mat[(int)CellMat.Outline].SetColor("_OutlineColor", color * intensity);
-        }
-
-
-
         // ---------------------------------
         // Editor
         // ---------------------------------
@@ -162,10 +157,16 @@ namespace TowerDefenseRemake.Grid
         void OnChangeGridType()
         {
             // リセット
-            for(int i = 0; i < transform.childCount; i++)
+            //for (int i = 0; i < transform.childCount; i++)
+            //{
+            //    DestroyImmediate(transform.GetChild(i).gameObject);
+            //}
+            if (_childGameObject != null)
             {
-                DestroyImmediate(transform.GetChild(i).gameObject);
+                DestroyImmediate(_childGameObject);
+                _childGameObject = null;
             }
+
             _mat[(int)CellMat.Road].SetFloat("_N", 0);
             _mat[(int)CellMat.Road].SetFloat("_S", 0);
             _mat[(int)CellMat.Road].SetFloat("_E", 0);
@@ -176,13 +177,13 @@ namespace TowerDefenseRemake.Grid
             {
                 case CellType.None:
                     // レイヤーをNotRoadに変更
-                    gameObject.layer = LayerMask.NameToLayer("NotRoad");
+                    ChangeAllLayer("NotRoad");
                     // インタラクト
                     ConstructableExist = false;
                     break;
                 case CellType.Road:
                     // レイヤーをRoadに変更
-                    gameObject.layer = LayerMask.NameToLayer("Road");
+                    ChangeAllLayer("Road");
                     // インタラクト
                     ConstructableExist = true;
                     OnChangeRoadDirection();
@@ -191,7 +192,7 @@ namespace TowerDefenseRemake.Grid
                     // TODO:Garden生成
 
                     // レイヤーをNotRoadに変更
-                    gameObject.layer = LayerMask.NameToLayer("NotRoad");
+                    ChangeAllLayer("NotRoad");
                     // インタラクト
                     ConstructableExist = true;
                     break;
@@ -199,7 +200,7 @@ namespace TowerDefenseRemake.Grid
                     // TODO:Spawner生成
 
                     // レイヤーをNotRoadに変更
-                    gameObject.layer = LayerMask.NameToLayer("NotRoad");
+                    ChangeAllLayer("NotRoad");
                     // インタラクト
                     ConstructableExist = true;
                     OnChangeStartDirection();
@@ -208,7 +209,7 @@ namespace TowerDefenseRemake.Grid
                     // TODO:Goal生成
 
                     // レイヤーをNotRoadに変更
-                    gameObject.layer = LayerMask.NameToLayer("NotRoad");
+                    ChangeAllLayer("NotRoad");
                     // インタラクト
                     ConstructableExist = true;
                     OnChangeGoalDirection();
@@ -268,6 +269,68 @@ namespace TowerDefenseRemake.Grid
                     break;
                 default:
                     break;
+            }
+        }
+
+
+        // ----------------------------------------------------------------------------------------
+        // メソッド
+        // ----------------------------------------------------------------------------------------
+        // ---------------------------
+        // Outlineの色を変える
+        // ---------------------------
+        private void ChangeOutlineColor(Color color, float intensity)
+        {
+            _mat[(int)CellMat.Outline].SetColor("_OutlineColor", color * intensity);
+        }
+
+        public void ChangeOutlineExistColor()
+        {
+            ChangeOutlineColor(_constructableExistColor, _intensity);
+        }
+
+        public void ChangeOutlineUnExistColor()
+        {
+            ChangeOutlineColor(_constructableUnExistColor, _intensity);
+        }
+
+        public void ChangeOutlineDefaultColor()
+        {
+            ChangeOutlineColor(Color.white, 1.0f);
+        }
+
+        // ---------------------------
+        // 真ん中の色を変える
+        // ---------------------------
+        public void ChangeCellCenterUnExistColor()
+        {
+            _cellCenter.gameObject.SetActive(true);
+            var main = _cellCenter.main;
+            main.startColor = new ParticleSystem.MinMaxGradient(_constructableUnExistColor);
+        }
+
+        public void ChangeCellCenterExistColor()
+        {
+            _cellCenter.gameObject.SetActive(true);
+            var main = _cellCenter.main;
+            main.startColor = new ParticleSystem.MinMaxGradient(_constructableExistColor);
+        }
+
+        public void ChangeCellCenterDefaultColor()
+        {
+            _cellCenter.gameObject.SetActive(false);
+        }
+
+        // ---------------------------
+        // 親子のLayerを変える
+        // ---------------------------
+        private void ChangeAllLayer(string layerName)
+        {
+            gameObject.layer = LayerMask.NameToLayer(layerName);
+
+            for (int i = 0; i < transform.childCount; i++)
+            {
+                transform.GetChild(i).gameObject.layer = LayerMask.NameToLayer(layerName);
             }
         }
     }

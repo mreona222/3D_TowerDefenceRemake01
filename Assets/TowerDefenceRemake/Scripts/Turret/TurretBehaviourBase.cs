@@ -31,7 +31,7 @@ namespace TowerDefenseRemake.Turret
 
         [BoxGroup("ステート")]
         [SerializeField]
-        private bool _constructed = true;
+        private bool _constructed = false;
         public bool Constructed
         {
             get => _constructed;
@@ -148,6 +148,7 @@ namespace TowerDefenseRemake.Turret
             // ターゲットのほうを向く
             this
                 .UpdateAsObservable()
+                .Where(_ => Constructed)
                 .Subscribe(_ =>
                 {
                     LookAtTarget();
@@ -156,7 +157,7 @@ namespace TowerDefenseRemake.Turret
 
             // クールタイムありで発射(発射間隔の更新のたびに呼び出される)
             CurrentFireSpan
-                .Select(x => Observable.EveryUpdate().Where(_ => LockOn && _currentTargetInfo != null).ThrottleFirst(TimeSpan.FromSeconds(x)))
+                .Select(x => Observable.EveryUpdate().Where(_ => LockOn && _currentTargetInfo != null && Constructed).ThrottleFirst(TimeSpan.FromSeconds(x)))
                 .Switch()
                 .Subscribe(_ =>
                 {
@@ -274,17 +275,43 @@ namespace TowerDefenseRemake.Turret
         // ------------------------------------------------------------------------------------------
         public void Construct()
         {
-            Vector3 centerPos = new Vector3();
-
+            // セルをデフォルトカラーに
             foreach (GameObject cell in RayCastCell())
             {
-                centerPos += cell.transform.position;
-
                 GridCellBehaviour cellBehaviour = cell.GetComponent<GridCellBehaviour>();
-                cellBehaviour.ConstructableExist = true;
+
+                cellBehaviour.ChangeCellCenterDefaultColor();
             }
 
-            transform.position = centerPos / ConstructableMatrix.column / ConstructableMatrix.row + transform.up * _cellSize / 2;
+            // 建築可能のとき
+            if (Constructable)
+            {
+                // セルの中心に移動させる
+                Vector3 centerPos = new Vector3();
+
+                foreach (GameObject cell in RayCastCell())
+                {
+                    centerPos += cell.transform.position;
+
+                    GridCellBehaviour cellBehaviour = cell.GetComponent<GridCellBehaviour>();
+                    cellBehaviour.ConstructableExist = true;
+                }
+
+                transform.position = centerPos / ConstructableMatrix.column / ConstructableMatrix.row + transform.up * _cellSize / 2;
+
+                // TODO:本当に建築するか確認する
+
+
+
+                Constructed = true;
+            }
+            // 建築可能でなかったとき
+            else
+            {
+                // 削除する
+                Destroy(gameObject);
+            }
+
         }
 
         public List<GameObject> RayCastCell()
@@ -320,44 +347,34 @@ namespace TowerDefenseRemake.Turret
             // 更新がある場合
             else
             {
-                foreach(GameObject oldCell in _prevCells)
+                // 前回のセルをデフォルトカラーに
+                foreach (GameObject oldCell in _prevCells)
                 {
                     GridCellBehaviour cellBehaviour = oldCell.GetComponent<GridCellBehaviour>();
 
-                    cellBehaviour.BrightenCell(Color.white, 1.0f);
+                    cellBehaviour.ChangeCellCenterDefaultColor();
                 }
 
-                _prevCells = newCells;
-
+                // 新しいセルを光らせる
                 foreach (GameObject cell in newCells)
                 {
                     GridCellBehaviour cellBehaviour = cell.GetComponent<GridCellBehaviour>();
 
                     if (!cellBehaviour.ConstructableExist)
                     {
-                        cellBehaviour.BrightenCell(cellBehaviour.InteractableColor, cellBehaviour.Intensity);
+                        cellBehaviour.ChangeCellCenterUnExistColor();
                     }
                     else
                     {
-                        cellBehaviour.BrightenCell(cellBehaviour.UninteractableColor, cellBehaviour.Intensity);
+                        cellBehaviour.ChangeCellCenterExistColor();
                         con = false;
                     }
                 }
             }
 
+            _prevCells = newCells;
             Constructable = con;
         }
-
-        public void ChangeCellDefaultColor()
-        {
-            foreach (GameObject cell in RayCastCell())
-            {
-                GridCellBehaviour cellBehaviour = cell.GetComponent<GridCellBehaviour>();
-
-                cellBehaviour.BrightenCell(Color.white, 1.0f);
-            }
-        }
-        
 
         // ------------------------------------------------------------------------------------------
         // Interactableインターフェース
