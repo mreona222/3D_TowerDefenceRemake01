@@ -15,6 +15,9 @@ namespace TowerDefenseRemake.Grid
         [SerializeField]
         private int row, column;
 
+        [SerializeField]
+        private float _cellSize = 15.0f;
+
 #if UNITY_EDITOR
         [Button]
         public void GenerateGridCell()
@@ -30,7 +33,7 @@ namespace TowerDefenseRemake.Grid
 
             DestroyAllCells();
 
-            GameObject gridCell = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TowerDefenceRemake/Prefabs/Cell/CellCore.prefab");
+            GameObject gridCell = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/TowerDefenceRemake/Prefabs/Cell/Cell.prefab");
 
             for (int j = 0; j < column; j++)
             {
@@ -39,9 +42,9 @@ namespace TowerDefenseRemake.Grid
                     GameObject go = (GameObject)PrefabUtility.InstantiatePrefab(gridCell);
 
                     go.transform.position = new Vector3(
-                            gridCell.transform.localScale.x / 2 * (-row + 1) + gridCell.transform.localScale.x * i,
+                            _cellSize / 2 * (-row + 1) + _cellSize * i,
                             transform.position.y,
-                            gridCell.transform.localScale.z / 2 * (column - 1) - gridCell.transform.localScale.z * j);
+                            _cellSize / 2 * (column - 1) - _cellSize * j);
 
                     go.transform.SetParent(transform, true);
                 }

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using System.Linq;
+using DG.Tweening;
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -50,16 +51,21 @@ namespace TowerDefenseRemake.Grid
 
         [BoxGroup("見た目")]
         [SerializeField]
-        private float _intensity = 25.0f;
+        private float _intensity = 1.0f;
 
-        private MeshRenderer _MR;
-        private Material[] _mat;
+        [BoxGroup("見た目")]
+        [SerializeField]
+        private GameObject _cellAppearance;
+        private MeshRenderer _cellAppearanceMR;
+        private Material[] _cellAppearanceMats;
 
         private GameObject _childGameObject;
 
         [BoxGroup("見た目")]
         [SerializeField]
-        private ParticleSystem _cellCenter;
+        private GameObject _cellCenter;
+        private MeshRenderer _cellCenterMR;
+        private Sequence _cellCenterSequence;
 
 
 
@@ -97,39 +103,45 @@ namespace TowerDefenseRemake.Grid
 
         private void Start()
         {
-            _MR = GetComponent<MeshRenderer>();
+            // ------------
+            // Material
+            // ------------
+            _cellAppearanceMR = _cellAppearance.GetComponent<MeshRenderer>();
+            _cellCenterMR = _cellCenter.GetComponent<MeshRenderer>();
 
-            _mat = new Material[_MR.sharedMaterials.Length];
+            _cellAppearanceMats = new Material[_cellAppearanceMR.sharedMaterials.Length];
+
 #if UNITY_EDITOR
-            for (int i = 0; i < _MR.sharedMaterials.Length; i++)
+            for (int i = 0; i < _cellAppearanceMats.Length; i++)
             {
-                if (_mat[i] == null)
+                if (_cellAppearanceMats[i] == null)
                 {
                     if (EditorApplication.isPlaying)
                     {
-                        _mat[i] = _MR.materials[i];
+                        _cellAppearanceMats[i] = _cellAppearanceMR.materials[i];
                     }
                     else
                     {
-                        _mat[i] = new Material(_MR.sharedMaterials[i]);
+                        _cellAppearanceMats[i] = new Material(_cellAppearanceMR.sharedMaterials[i]);
                     }
                 }
             }
 
-            if (!EditorApplication.isPlaying) 
-            { 
-                _MR.sharedMaterials = _mat; 
+            if (!EditorApplication.isPlaying)
+            {
+                _cellAppearanceMR.sharedMaterials = _cellAppearanceMats;
             }
 #else
-            _mat = _MR.materials;
+            _cellAppearanceMats = _cellAppearanceMR.materials;
 #endif
         }
 
+
         private void OnDestroy()
         {
-            foreach (Material mat in _mat)
+            foreach (Material mat in _cellAppearanceMats)
             {
-                if(mat != null)
+                if (mat != null)
                 {
 #if UNITY_EDITOR
                     if (EditorApplication.isPlaying)
@@ -157,20 +169,15 @@ namespace TowerDefenseRemake.Grid
         void OnChangeGridType()
         {
             // リセット
-            //for (int i = 0; i < transform.childCount; i++)
-            //{
-            //    DestroyImmediate(transform.GetChild(i).gameObject);
-            //}
             if (_childGameObject != null)
             {
                 DestroyImmediate(_childGameObject);
                 _childGameObject = null;
             }
-
-            _mat[(int)CellMat.Road].SetFloat("_N", 0);
-            _mat[(int)CellMat.Road].SetFloat("_S", 0);
-            _mat[(int)CellMat.Road].SetFloat("_E", 0);
-            _mat[(int)CellMat.Road].SetFloat("_W", 0);
+            _cellAppearanceMats[(int)CellMat.Road].SetFloat("_N", 0);
+            _cellAppearanceMats[(int)CellMat.Road].SetFloat("_S", 0);
+            _cellAppearanceMats[(int)CellMat.Road].SetFloat("_E", 0);
+            _cellAppearanceMats[(int)CellMat.Road].SetFloat("_W", 0);
 
             // 初期設定
             switch (_type)
@@ -223,17 +230,17 @@ namespace TowerDefenseRemake.Grid
         void OnChangeRoadDirection()
         {
             // 道を表示
-            if (_roadDirection.Contains("N")) { _mat[(int)CellMat.Road].SetFloat("_N", 1.0f); }
-            else { _mat[(int)CellMat.Road].SetFloat("_N", 0); }
+            if (_roadDirection.Contains("N")) { _cellAppearanceMats[(int)CellMat.Road].SetFloat("_N", 1.0f); }
+            else { _cellAppearanceMats[(int)CellMat.Road].SetFloat("_N", 0); }
 
-            if (_roadDirection.Contains("S")) { _mat[(int)CellMat.Road].SetFloat("_S", 1.0f); }
-            else { _mat[(int)CellMat.Road].SetFloat("_S", 0); }
+            if (_roadDirection.Contains("S")) { _cellAppearanceMats[(int)CellMat.Road].SetFloat("_S", 1.0f); }
+            else { _cellAppearanceMats[(int)CellMat.Road].SetFloat("_S", 0); }
 
-            if (_roadDirection.Contains("E")) { _mat[(int)CellMat.Road].SetFloat("_E", 1.0f); }
-            else { _mat[(int)CellMat.Road].SetFloat("_E", 0); }
+            if (_roadDirection.Contains("E")) { _cellAppearanceMats[(int)CellMat.Road].SetFloat("_E", 1.0f); }
+            else { _cellAppearanceMats[(int)CellMat.Road].SetFloat("_E", 0); }
 
-            if (_roadDirection.Contains("W")) { _mat[(int)CellMat.Road].SetFloat("_W", 1.0f); }
-            else { _mat[(int)CellMat.Road].SetFloat("_W", 0); }
+            if (_roadDirection.Contains("W")) { _cellAppearanceMats[(int)CellMat.Road].SetFloat("_W", 1.0f); }
+            else { _cellAppearanceMats[(int)CellMat.Road].SetFloat("_W", 0); }
         }
 
         void OnChangeStartDirection()
@@ -281,7 +288,7 @@ namespace TowerDefenseRemake.Grid
         // ---------------------------
         private void ChangeOutlineColor(Color color, float intensity)
         {
-            _mat[(int)CellMat.Outline].SetColor("_OutlineColor", color * intensity);
+            _cellAppearanceMats[(int)CellMat.Outline].SetColor("_OutlineColor", color * intensity);
         }
 
         public void ChangeOutlineExistColor()
@@ -304,21 +311,44 @@ namespace TowerDefenseRemake.Grid
         // ---------------------------
         public void ChangeCellCenterUnExistColor()
         {
+            //_cellCenter.gameObject.SetActive(true);
+            //var main = _cellCenter.main;
+            //main.startColor = new ParticleSystem.MinMaxGradient(_constructableUnExistColor);
+
             _cellCenter.gameObject.SetActive(true);
-            var main = _cellCenter.main;
-            main.startColor = new ParticleSystem.MinMaxGradient(_constructableUnExistColor);
+            _cellCenterMR.material.color = Color.blue;
+
+            //_cellCenterSequence = DOTween.Sequence()
+            //    .Join(_cellCenter.transform.DORotate(new Vector3(0, 360.0f, 180.0f), 3.0f, RotateMode.FastBeyond360))
+            //    .Join(_cellCenter.transform.DOPunchPosition(new Vector3(0, 1.0f, 0), 3.0f, vibrato: 0))
+            //    .SetLoops(-1)
+            //    .SetLink(gameObject);
         }
 
         public void ChangeCellCenterExistColor()
         {
+            //_cellCenter.gameObject.SetActive(true);
+            //var main = _cellCenter.main;
+            //main.startColor = new ParticleSystem.MinMaxGradient(_constructableExistColor);
+
             _cellCenter.gameObject.SetActive(true);
-            var main = _cellCenter.main;
-            main.startColor = new ParticleSystem.MinMaxGradient(_constructableExistColor);
+            _cellCenterMR.material.color = Color.red;
+
+            //_cellCenterSequence = DOTween.Sequence()
+            //    .Join(_cellCenter.transform.DORotate(new Vector3(0, 360.0f, 180.0f), 3.0f, RotateMode.FastBeyond360))
+            //    .Join(_cellCenter.transform.DOPunchPosition(new Vector3(0, 1.0f, 0), 3.0f, vibrato: 0))
+            //    .SetLoops(-1)
+            //    .SetLink(gameObject);
         }
 
         public void ChangeCellCenterDefaultColor()
         {
+            //_cellCenter.gameObject.SetActive(false);
+
             _cellCenter.gameObject.SetActive(false);
+
+            //_cellCenterSequence?.Kill();
+            //_cellCenterSequence = null;
         }
 
         // ---------------------------

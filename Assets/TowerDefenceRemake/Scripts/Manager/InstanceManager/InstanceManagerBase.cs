@@ -7,7 +7,7 @@ using System;
 
 namespace TowerDefenseRemake.Manager
 {
-    public abstract class BaseInstanceManager : MonoBehaviour
+    public abstract class InstanceManagerBase : MonoBehaviour
     {
         // 既にロードしたか
         protected static bool initialLoad = false;

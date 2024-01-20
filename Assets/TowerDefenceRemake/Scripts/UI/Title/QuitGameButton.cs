@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 
 namespace TowerDefenseRemake.UI
 {
-    public class QuitGameButton : BaseButton
+    public class QuitGameButton : ButtonBase
     {
         public override void OnPointerClick(PointerEventData eventData)
         {

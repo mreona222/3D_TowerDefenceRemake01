@@ -21,12 +21,12 @@ namespace TowerDefenseRemake.Manager
 
         public static event Action<GameState> OnGameStateChanged;
 
-        public BaseInstanceManager _IM;
+        public InstanceManagerBase _IM;
 
         private void OnEnterGameState(GameState newState)
         {
             // シーンごとのマネージャーを取得
-            _IM = FindObjectOfType<BaseInstanceManager>();
+            _IM = FindObjectOfType<InstanceManagerBase>();
 
             switch (newState)
             {

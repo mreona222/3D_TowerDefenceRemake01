@@ -6,7 +6,7 @@ using TowerDefenseRemake.Manager;
 using TowerDefenseRemake.UI;
 using Sirenix.OdinInspector;
 
-public class TitleInstanceManager : BaseInstanceManager
+public class TitleInstanceManager : InstanceManagerBase
 {
     // ----------------------------------------------------
     // 初期化

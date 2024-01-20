@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace TowerDefenseRemake.Manager
 {
-    public class BattleInstanceManager : BaseInstanceManager
+    public class InstanceManagerBattle : InstanceManagerBase
     {
         [SerializeField]
         public Transform[] EnemyTarget;

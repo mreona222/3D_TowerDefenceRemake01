@@ -7,7 +7,7 @@ using UnityEngine.EventSystems;
 
 namespace TowerDefenseRemake.UI
 {
-    public class StartGameButton : BaseButton
+    public class StartGameButton : ButtonBase
     {
         [SerializeField]
         SceneTransitionManager.Scenes menu;

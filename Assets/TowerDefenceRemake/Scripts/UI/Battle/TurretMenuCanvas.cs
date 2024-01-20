@@ -9,7 +9,7 @@ namespace TowerDefenseRemake.UI
     public class TurretMenuCanvas : MonoBehaviour
     {
         [SerializeField]
-        private GenerateTurretButton _generateButtonPrefab;
+        private TurretGeneratorButton _generateButtonPrefab;
 
         [SerializeField]
         private TurretMenuHandleButton _handle;
@@ -31,11 +31,11 @@ namespace TowerDefenseRemake.UI
             for (int i = 0; i < System.Enum.GetValues(typeof(TurretType)).Length; i++)
             {
                 // ボタンを生成
-                GenerateTurretButton buttonInst = Instantiate(_generateButtonPrefab, _content);
+                TurretGeneratorButton buttonInst = Instantiate(_generateButtonPrefab, _content);
                 buttonInst.Type = (TurretType)i;
 
                 // ドラッグ開始コールバック
-                buttonInst.SetCallbackOnEnterDrag(() =>
+                buttonInst.OnEnterDragAction += () =>
                 {
                     // メニューを非表示
                     if (_handle != null)
@@ -55,17 +55,17 @@ namespace TowerDefenseRemake.UI
                             cell.ChangeOutlineUnExistColor();
                         }
                     }
-                });
+                };
 
                 // ドラッグ終了コールバック
-                buttonInst.SetCallbackOnExitDrag(() =>
+                buttonInst.OnExitDragAction += () =>
                 {
                     // セルをデフォルトカラーに
                     foreach (GridCellBehaviour cell in _allCells)
                     {
                         cell.ChangeOutlineDefaultColor();
                     }
-                });
+                };
             }
         }
     }

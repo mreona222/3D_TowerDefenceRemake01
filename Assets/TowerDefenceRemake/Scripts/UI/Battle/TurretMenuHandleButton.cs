@@ -6,7 +6,7 @@ using UnityEngine.EventSystems;
 
 namespace TowerDefenseRemake.UI
 {
-    public class TurretMenuHandleButton : BaseButton
+    public class TurretMenuHandleButton : ButtonBase
     {
         [SerializeField]
         bool _hide = true;

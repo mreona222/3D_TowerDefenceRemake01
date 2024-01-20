@@ -11,7 +11,7 @@ using UnityEngine.UI;
 
 namespace TowerDefenseRemake.UI 
 {
-    public class BaseButton : MonoBehaviour, IInteractable
+    public class ButtonBase : MonoBehaviour, IInteractable
     {
         [BoxGroup("Base")]
         [SerializeField]
@@ -35,7 +35,7 @@ namespace TowerDefenseRemake.UI
         [BoxGroup("Base")]
         [Space(10)]
         [SerializeField]
-        private BaseButton[] buttons;
+        private ButtonBase[] buttons;
 
         private Image _image;
 
@@ -73,7 +73,7 @@ namespace TowerDefenseRemake.UI
         {
             if (Interactable) return;
 
-            foreach (BaseButton button in buttons)
+            foreach (ButtonBase button in buttons)
             {
                 button.Interactable = false;
             }

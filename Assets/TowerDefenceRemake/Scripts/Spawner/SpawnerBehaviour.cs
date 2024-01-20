@@ -24,7 +24,7 @@ namespace TowerDefenseRemake.Spawner
                 .Timer(TimeSpan.Zero,TimeSpan.FromSeconds(6.0f))
                 .Subscribe(_ =>
                 {
-                    SpawnEnemy(EnemyType.Slime, ((BattleInstanceManager)GameManager.Instance._IM).EnemyTarget[0]);
+                    SpawnEnemy(EnemyType.Slime, ((InstanceManagerBattle)GameManager.Instance._IM).EnemyTarget[0]);
                 })
                 .AddTo(this);
         }

@@ -12,7 +12,7 @@ using UnityEngine.UI;
 
 namespace TowerDefenseRemake.UI
 {
-    public class GenerateTurretButton : BaseButton
+    public class TurretGeneratorButton : ButtonBase
     {
         private enum DragState
         {
@@ -49,8 +49,19 @@ namespace TowerDefenseRemake.UI
 
 
         // コールバック
-        private Action _onEnterDragAction;
-        private Action _onExitDragAction;
+        private event Action _onEnterDragAction;
+        public event Action OnEnterDragAction
+        {
+            add { _onEnterDragAction += value; }
+            remove { _onEnterDragAction -= value; }
+        }
+
+        private event Action _onExitDragAction;
+        public event Action OnExitDragAction
+        {
+            add { _onExitDragAction += value; }
+            remove { _onExitDragAction -= value; }
+        }
 
 
         void Start()
@@ -155,17 +166,6 @@ namespace TowerDefenseRemake.UI
             }
 
             _turretInst = null;
-        }
-
-
-        public void SetCallbackOnEnterDrag(Action callback)
-        {
-            _onEnterDragAction += callback;
-        }
-
-        public void SetCallbackOnExitDrag(Action callback)
-        {
-            _onExitDragAction += callback;
         }
     }
 }

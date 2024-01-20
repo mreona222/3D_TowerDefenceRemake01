@@ -278,7 +278,7 @@ namespace TowerDefenseRemake.Turret
             // セルをデフォルトカラーに
             foreach (GameObject cell in RayCastCell())
             {
-                GridCellBehaviour cellBehaviour = cell.GetComponent<GridCellBehaviour>();
+                GridCellBehaviour cellBehaviour = cell.GetComponentInParent<GridCellBehaviour>();
 
                 cellBehaviour.ChangeCellCenterDefaultColor();
             }
@@ -293,7 +293,7 @@ namespace TowerDefenseRemake.Turret
                 {
                     centerPos += cell.transform.position;
 
-                    GridCellBehaviour cellBehaviour = cell.GetComponent<GridCellBehaviour>();
+                    GridCellBehaviour cellBehaviour = cell.GetComponentInParent<GridCellBehaviour>();
                     cellBehaviour.ConstructableExist = true;
                 }
 
@@ -350,7 +350,7 @@ namespace TowerDefenseRemake.Turret
                 // 前回のセルをデフォルトカラーに
                 foreach (GameObject oldCell in _prevCells)
                 {
-                    GridCellBehaviour cellBehaviour = oldCell.GetComponent<GridCellBehaviour>();
+                    GridCellBehaviour cellBehaviour = oldCell.GetComponentInParent<GridCellBehaviour>();
 
                     cellBehaviour.ChangeCellCenterDefaultColor();
                 }
@@ -358,7 +358,7 @@ namespace TowerDefenseRemake.Turret
                 // 新しいセルを光らせる
                 foreach (GameObject cell in newCells)
                 {
-                    GridCellBehaviour cellBehaviour = cell.GetComponent<GridCellBehaviour>();
+                    GridCellBehaviour cellBehaviour = cell.GetComponentInParent<GridCellBehaviour>();
 
                     if (!cellBehaviour.ConstructableExist)
                     {
