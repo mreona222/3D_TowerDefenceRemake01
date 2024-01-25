@@ -8,9 +8,9 @@ namespace TowerDefenseRemake.UI
 {
     public class QuitGameButton : ButtonBase
     {
-        public override void OnPointerClick(PointerEventData eventData)
+        protected override void OnPointerClickInternal(PointerEventData eventData)
         {
-            base.OnPointerClick(eventData);
+            base.OnPointerClickInternal(eventData);
 
             // 処理
             SceneTransitionManager.Instance.QuitGame();

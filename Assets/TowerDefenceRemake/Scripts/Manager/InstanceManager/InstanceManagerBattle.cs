@@ -1,3 +1,4 @@
+using Sirenix.OdinInspector;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,8 +7,13 @@ namespace TowerDefenseRemake.Manager
 {
     public class InstanceManagerBattle : InstanceManagerBase
     {
+        [BoxGroup("ターゲット")]
         [SerializeField]
         public Transform[] EnemyTarget;
+
+        [BoxGroup("コンテンツ")]
+        [SerializeField]
+        public Transform UpgradeContentParent;
 
         // ----------------------------------------------------
         // 初期化

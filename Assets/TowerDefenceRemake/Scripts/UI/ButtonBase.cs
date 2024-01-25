@@ -11,6 +11,7 @@ using UnityEngine.UI;
 
 namespace TowerDefenseRemake.UI 
 {
+    [RequireComponent(typeof(Image))]
     public class ButtonBase : MonoBehaviour, IInteractable
     {
         [BoxGroup("Base")]
@@ -37,7 +38,7 @@ namespace TowerDefenseRemake.UI
         [SerializeField]
         private ButtonBase[] buttons;
 
-        private Image _image;
+        protected Image _image;
 
 
 
@@ -69,10 +70,60 @@ namespace TowerDefenseRemake.UI
         // ------------------------------------------------------------------------------------------------
         // コールバック
         // ------------------------------------------------------------------------------------------------
-        public virtual void OnPointerClick(PointerEventData eventData)
+        public void OnPointerClick(PointerEventData eventData)
         {
-            if (Interactable) return;
+            if (!Interactable) return;
 
+            OnPointerClickInternal(eventData);
+        }
+
+        public void OnPointerEnter(PointerEventData eventData)
+        {
+            if (!Interactable) return;
+
+            OnPointerEnterInternal(eventData);
+        }
+
+        public void OnPointerExit(PointerEventData eventData)
+        {
+            if (!Interactable) return;
+
+            OnPointerExitInternal(eventData);
+        }
+        
+        public void OnPointerDown(PointerEventData eventData)
+        {
+            if (!Interactable) return;
+
+            OnPointerDownInternal(eventData);
+        }
+
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            if (!Interactable) return;
+
+            OnBeginDragInternal(eventData);
+        }
+
+        public void OnDrag(PointerEventData eventData)
+        {
+            if (!Interactable) return;
+
+            OnDragInternal(eventData);
+        }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            if (!Interactable) return;
+
+            OnEndDragInternal(eventData);
+        }
+
+        // ------------------------------------------------------------------------------------------------
+        // コールバックInternal
+        // ------------------------------------------------------------------------------------------------
+        protected virtual void OnPointerClickInternal(PointerEventData eventData)
+        {
             foreach (ButtonBase button in buttons)
             {
                 button.Interactable = false;
@@ -90,10 +141,8 @@ namespace TowerDefenseRemake.UI
             }
         }
 
-        public virtual void OnPointerEnter(PointerEventData eventData)
+        protected virtual void OnPointerEnterInternal(PointerEventData eventData)
         {
-            if (Interactable) return;
-
             if (_image != null)
             {
                 _image.color = _enterColor;
@@ -106,10 +155,8 @@ namespace TowerDefenseRemake.UI
             }
         }
 
-        public virtual void OnPointerExit(PointerEventData eventData)
+        protected virtual void OnPointerExitInternal(PointerEventData eventData)
         {
-            if (Interactable) return;
-
             if (_image != null)
             {
                 _image.color = _exitColor;
@@ -122,15 +169,13 @@ namespace TowerDefenseRemake.UI
             }
         }
 
-        public virtual void OnDrag(PointerEventData eventData)
+        protected virtual void OnDragInternal(PointerEventData eventData)
         {
-            if (Interactable) return;
+
         }
 
-        public virtual void OnPointerDown(PointerEventData eventData)
+        protected virtual void OnPointerDownInternal(PointerEventData eventData)
         {
-            if (Interactable) return;
-
             if (_image != null)
             {
                 _image.color = _downColor;
@@ -143,14 +188,14 @@ namespace TowerDefenseRemake.UI
             }
         }
 
-        public virtual void OnBeginDrag(PointerEventData eventData)
+        protected virtual void OnBeginDragInternal(PointerEventData eventData)
         {
-            if (Interactable) return;
+
         }
 
-        public virtual void OnEndDrag(PointerEventData eventData)
+        protected virtual void OnEndDragInternal(PointerEventData eventData)
         {
-            if (Interactable) return;
+
         }
     }
 }

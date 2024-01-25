@@ -4,10 +4,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mime;
 using TowerDefenseRemake.Construction;
 using TowerDefenseRemake.Damage;
 using TowerDefenseRemake.Grid;
 using TowerDefenseRemake.Interaction;
+using TowerDefenseRemake.Manager;
+using TowerDefenseRemake.UI;
 using UniRx;
 using UniRx.Diagnostics;
 using UniRx.Triggers;
@@ -143,6 +146,30 @@ namespace TowerDefenseRemake.Turret
 
 
 
+
+        [BoxGroup("コンテンツ")]
+        [Tooltip("コンテンツリスト")]
+        [SerializeField]
+        private ConstructableContentList _contentList;
+
+        [BoxGroup("コンテンツ")]
+        [Tooltip("コンテンツタイプ")]
+        [ValueDropdown(nameof(ContentTypes), IsUniqueList = true)]
+        [SerializeField]
+        protected ConstructableUpgradeContentBase.ContentType[] _contentTypes;
+
+        private static IEnumerable<ConstructableUpgradeContentBase.ContentType> ContentTypes
+            = Enumerable.Range(0, System.Enum.GetValues(typeof(ConstructableUpgradeContentBase.ContentType)).Length).Cast<ConstructableUpgradeContentBase.ContentType>();
+
+        List<ConstructableUpgradeContentBase> _contentInsts = new List<ConstructableUpgradeContentBase>();
+
+        [BoxGroup("コンテンツ")]
+        [Tooltip("コンテンツの親")]
+        [SerializeField]
+        Transform _upgradeContentParent;
+
+
+
         protected virtual void Start()
         {
             // ターゲットのほうを向く
@@ -164,6 +191,33 @@ namespace TowerDefenseRemake.Turret
                     Fire();
                 })
                 .AddTo(this);
+
+            // UpgradeContent作成
+            foreach (ConstructableUpgradeContentBase.ContentType content in
+                Enumerable.Range(0, System.Enum.GetValues(typeof(ConstructableUpgradeContentBase.ContentType)).Length).Cast<ConstructableUpgradeContentBase.ContentType>())
+            {
+                ConstructableUpgradeContentBase contentInst = Instantiate(_contentList.Content[(int)content], _upgradeContentParent);
+                _contentInsts.Add(contentInst);
+
+                switch (content)
+                {
+                    case ConstructableUpgradeContentBase.ContentType.Power:
+                        contentInst.OnClickButton += UpgradePower;
+                        break;
+
+                    case ConstructableUpgradeContentBase.ContentType.Range:
+                        contentInst.OnClickButton += UpgradeRange;
+                        break;
+
+                    case ConstructableUpgradeContentBase.ContentType.Span:
+                        contentInst.OnClickButton += UpgradeSpan;
+                        break;
+
+                    default:
+                        Debug.LogError("コンテンツの追加に失敗しました。");
+                        break;
+                }
+            }
         }
 
         // ------------------------------------------------------------------------------------------
@@ -209,7 +263,7 @@ namespace TowerDefenseRemake.Turret
             // 衝突情報とゲームオブジェクト
             RaycastHit[] hits = Physics.SphereCastAll(_appearance.position, CurrentRange, Vector3.up, 0, _enemyLayerMask);
             List<GameObject> hitsGO = new List<GameObject>();
-            foreach(RaycastHit hit in hits)
+            foreach (RaycastHit hit in hits)
             {
                 hitsGO.Add(hit.collider.gameObject);
             }
@@ -271,8 +325,46 @@ namespace TowerDefenseRemake.Turret
         }
 
         // ------------------------------------------------------------------------------------------
+        // アップグレード
+        // ------------------------------------------------------------------------------------------
+        protected virtual void UpgradePower(int raiseLevel)
+        {
+            Debug.Log($"{gameObject.name}の{ConstructableUpgradeContentBase.ContentType.Power.ToString()}レベルを{raiseLevel}上げた。");
+        }
+
+        protected virtual void UpgradeRange(int raiseLevel)
+        {
+            Debug.Log($"{gameObject.name}の{ConstructableUpgradeContentBase.ContentType.Range.ToString()}レベルを{raiseLevel}上げた。");
+        }
+
+        protected virtual void UpgradeSpan(int raiseLevel)
+        {
+            Debug.Log($"{gameObject.name}の{ConstructableUpgradeContentBase.ContentType.Span.ToString()}レベルを{raiseLevel}上げた。");
+        }
+
+        // ------------------------------------------------------------------------------------------
         // Constructableインターフェース
         // ------------------------------------------------------------------------------------------
+        public List<GameObject> RayCastCell()
+        {
+            List<GameObject> cellsGO = new List<GameObject>();
+
+            for (int j = 0; j < ConstructableMatrix.column; j++)
+            {
+                for (int i = 0; i < ConstructableMatrix.row; i++)
+                {
+                    Vector3 rayPos = transform.position + new Vector3(_cellSize / 2 * (-ConstructableMatrix.row + 1) + _cellSize * i, 0.5f, _cellSize / 2 * (ConstructableMatrix.column - 1) - _cellSize * j);
+
+                    if (Physics.Raycast(new Ray(rayPos, -transform.up), out RaycastHit hit, Mathf.Infinity, _cellMask))
+                    {
+                        cellsGO.Add(hit.collider.gameObject);
+                    }
+                }
+            }
+
+            return cellsGO;
+        }
+
         public void Construct()
         {
             // セルをデフォルトカラーに
@@ -311,30 +403,9 @@ namespace TowerDefenseRemake.Turret
                 // 削除する
                 Destroy(gameObject);
             }
-
         }
 
-        public List<GameObject> RayCastCell()
-        {
-            List<GameObject> cellsGO = new List<GameObject>();
-
-            for (int j = 0; j < ConstructableMatrix.column; j++)
-            {
-                for (int i = 0; i < ConstructableMatrix.row; i++)
-                {
-                    Vector3 rayPos = transform.position + new Vector3(_cellSize / 2 * (-ConstructableMatrix.row + 1) + _cellSize * i, 0.5f, _cellSize / 2 * (ConstructableMatrix.column - 1) - _cellSize * j);
-
-                    if (Physics.Raycast(new Ray(rayPos, -transform.up), out RaycastHit hit, Mathf.Infinity, _cellMask))
-                    {
-                        cellsGO.Add(hit.collider.gameObject);
-                    }
-                }
-            }
-
-            return cellsGO;
-        }
-
-        public void UpdateConstructable()
+        public void UpdateConstructionCell()
         {
             List<GameObject> newCells = RayCastCell();
             bool con = true;
@@ -382,6 +453,21 @@ namespace TowerDefenseRemake.Turret
         public virtual void OnPointerClick(PointerEventData eventData)
         {
             if (!Interactable) return;
+
+            _upgradeContentParent.gameObject.GetComponentInParent<Canvas>(true).gameObject.SetActive(true);
+
+            foreach (ConstructableUpgradeContentBase.ContentType content in 
+                Enumerable.Range(0, System.Enum.GetValues(typeof(ConstructableUpgradeContentBase.ContentType)).Length).Cast<ConstructableUpgradeContentBase.ContentType>())
+            {
+                if (_contentTypes.Contains(content))
+                {
+                    _contentInsts[(int)content].gameObject.SetActive(true);
+                }
+                else
+                {
+                    _contentInsts[(int)content].gameObject.SetActive(false);
+                }
+            }
         }
 
         public virtual void OnPointerEnter(PointerEventData eventData)

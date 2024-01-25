@@ -74,17 +74,17 @@ namespace TowerDefenseRemake.UI
         // ---------------------------------------------------------------------------------------------------------
         // コールバック
         // ---------------------------------------------------------------------------------------------------------
-        public override void OnPointerDown(PointerEventData eventData)
+        protected override void OnPointerDownInternal(PointerEventData eventData)
         {
-            base.OnPointerDown(eventData);
+            base.OnPointerDownInternal(eventData);
 
             _currentDragState = DragState.Judge;
             downPosition = eventData.position;
         }
 
-        public override void OnDrag(PointerEventData eventData)
+        protected override void OnDragInternal(PointerEventData eventData)
         {
-            base.OnDrag(eventData);
+            base.OnDragInternal(eventData);
 
             switch (_currentDragState)
             {
@@ -100,7 +100,7 @@ namespace TowerDefenseRemake.UI
                         {
                             _currentDragState = DragState.Drag;
 
-                            _onEnterDragAction.Invoke();
+                            _onEnterDragAction?.Invoke();
 
                             // タレット生成
                             _turretInst = Instantiate(_turretList.Turret[(int)Type].TurretPrefab);
@@ -141,7 +141,7 @@ namespace TowerDefenseRemake.UI
                         {
                             if (_turretInst != null)
                             {
-                                _turretInst.UpdateConstructable();
+                                _turretInst.UpdateConstructionCell();
 
                                 _turretInst.transform.position = hit.point;
                             }
@@ -151,16 +151,16 @@ namespace TowerDefenseRemake.UI
             }
         }
 
-        public override void OnEndDrag(PointerEventData eventData)
+        protected override void OnEndDragInternal(PointerEventData eventData)
         {
-            base.OnEndDrag(eventData);
+            base.OnEndDragInternal(eventData);
 
-            _onExitDragAction.Invoke();
+            _onExitDragAction?.Invoke();
 
             // タレットを配置する
             if (_turretInst != null)
             {
-                _turretInst.UpdateConstructable();
+                _turretInst.UpdateConstructionCell();
 
                 _turretInst.Construct();
             }

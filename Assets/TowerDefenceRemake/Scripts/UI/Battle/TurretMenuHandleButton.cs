@@ -14,9 +14,9 @@ namespace TowerDefenseRemake.UI
         [SerializeField]
         RectTransform _panel;
 
-        public override void OnPointerClick(PointerEventData eventData)
+        protected override void OnPointerClickInternal(PointerEventData eventData)
         {
-            base.OnPointerClick(eventData);
+            base.OnPointerClickInternal(eventData);
 
             // 隠れていたら
             if (_hide)

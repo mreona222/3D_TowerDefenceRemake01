@@ -5,7 +5,7 @@ using UnityEngine.EventSystems;
 
 namespace TowerDefenseRemake.Interaction
 {
-    public interface IInteractable : IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IDragHandler, IPointerDownHandler, IBeginDragHandler, IEndDragHandler
+    public interface IInteractable : IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler, IPointerDownHandler, IBeginDragHandler, IDragHandler, IEndDragHandler
     {
         bool Interactable { get; set; }
     }
