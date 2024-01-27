@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using System.Collections;
 using System.Collections.Generic;
 using TowerDefenseRemake.Grid;
@@ -9,15 +10,18 @@ namespace TowerDefenseRemake.UI
     public class TurretMenuCanvas : MonoBehaviour
     {
         [SerializeField]
-        private TurretGeneratorButton _generateButtonPrefab;
+        private ConstructableGeneratorButton _generateButtonPrefab;
 
         [SerializeField]
-        private TurretMenuHandleButton _handle;
+        private ConstructableMenuHandleButton _handle;
 
         [SerializeField]
         private Transform _content;
 
         GridCellBehaviour[] _allCells;
+
+        [SerializeField]
+        ConstructableRotateButton _rotateButton;
 
         private void Start()
         {
@@ -28,11 +32,11 @@ namespace TowerDefenseRemake.UI
 
         void GenerateButtons()
         {
-            for (int i = 0; i < System.Enum.GetValues(typeof(TurretType)).Length; i++)
+            for (int i = 0; i < System.Enum.GetValues(typeof(ConstructableType)).Length; i++)
             {
                 // ボタンを生成
-                TurretGeneratorButton buttonInst = Instantiate(_generateButtonPrefab, _content);
-                buttonInst.Type = (TurretType)i;
+                ConstructableGeneratorButton buttonInst = Instantiate(_generateButtonPrefab, _content);
+                buttonInst.Type = (ConstructableType)i;
 
                 // ドラッグ開始コールバック
                 buttonInst.OnEnterDragAction += () =>
@@ -40,8 +44,11 @@ namespace TowerDefenseRemake.UI
                     // メニューを非表示
                     if (_handle != null)
                     {
-                        _handle.HideMenu();
+                        UniTask.Create(async () => await _handle.HideMenu());
                     }
+
+                    // 回転情報
+                    buttonInst.Rotate = _rotateButton.Rotate;
 
                     // セルを光らせる
                     foreach (GridCellBehaviour cell in _allCells)

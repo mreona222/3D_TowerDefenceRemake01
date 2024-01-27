@@ -7,6 +7,6 @@ namespace TowerDefenseRemake.UI
     [CreateAssetMenu(menuName = "My Scriptable/Create ConstructableContentList")]
     public class ConstructableContentList : ScriptableObject
     {
-        public ConstructableUpgradeContentBase[] Content;
+        public ConstructableUpgradeContent[] Content;
     }
 }

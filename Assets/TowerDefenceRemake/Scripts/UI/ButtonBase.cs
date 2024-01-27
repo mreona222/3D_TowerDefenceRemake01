@@ -62,7 +62,7 @@ namespace TowerDefenseRemake.UI
         [SerializeField]
         Color _exitColor = new Color32(255, 255, 255, 255);
 
-        private void Start()
+        protected virtual void Start()
         {
             _image = GetComponent<Image>();
         }
