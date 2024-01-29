@@ -6,7 +6,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Mime;
-using TowerDefenseRemake.Construction;
 using TowerDefenseRemake.Damage;
 using TowerDefenseRemake.Grid;
 using TowerDefenseRemake.Interaction;
@@ -21,10 +20,11 @@ using UnityEngine.EventSystems;
 using UnityEngine.Rendering;
 using static UnityEngine.Rendering.DebugUI.Table;
 
-namespace TowerDefenseRemake.Turret
+namespace TowerDefenseRemake.Constructable.Turret
 {
     public abstract class TurretBehaviourBase : MonoBehaviour, IConstructable, IInteractable
     {
+        // ------------------------------------------------
         [BoxGroup("ステート")]
         [SerializeField]
         private bool _interactable = true;
@@ -52,25 +52,7 @@ namespace TowerDefenseRemake.Turret
             set => _constructable = value;
         }
 
-
-
-        [BoxGroup("レイ")]
-        [SerializeField]
-        LayerMask _cellMask = 1 << 9;
-        float _cellSize = 15.0f;
-
-        [BoxGroup("レイ")]
-        [SerializeField]
-        private ConstructMatrix _constructableMatrix;
-        public ConstructMatrix ConstructableMatrix
-        {
-            get => _constructableMatrix;
-            set => _constructableMatrix = value;
-        }
-
-        private List<GameObject> _prevCells = new List<GameObject>();
-
-
+        // ------------------------------------------------
 
         [BoxGroup("見た目")]
         [SerializeField]
@@ -78,9 +60,16 @@ namespace TowerDefenseRemake.Turret
 
         protected Animator _anim;
 
-
+        // ------------------------------------------------
 
         [BoxGroup("パラメーター")]
+        [Tooltip("インフォ")]
+        [SerializeField]
+        private ConstructableInfo _info;
+        public ConstructableInfo Info => _info;
+
+        [BoxGroup("パラメーター")]
+        [Tooltip("現在のパラメータ")]
         [SerializeField]
         private ReactiveDictionary<ParamType, ConstructLevel> _currentParams = new ReactiveDictionary<ParamType, ConstructLevel>();
         public ReactiveDictionary<ParamType, ConstructLevel> CurrentParams
@@ -89,7 +78,29 @@ namespace TowerDefenseRemake.Turret
             set => _currentParams = value;
         }
 
+        private ConstructMatrix _curretnMatrix;
+        public ConstructMatrix CurrentMatrix
+        {
+            get => _curretnMatrix;
+            set => _curretnMatrix = value;
+        }
 
+        // ------------------------------------------------
+
+        [BoxGroup("レイヤーマスク")]
+        [Tooltip("セルのレイヤー")]
+        [SerializeField]
+        LayerMask _cellMask = 1 << 9;
+        float _cellSize = 15.0f;
+
+        private List<GameObject> _prevCells = new List<GameObject>();
+
+        [BoxGroup("レイヤーマスク")]
+        [Tooltip("ターゲットのレイヤー")]
+        [SerializeField]
+        protected LayerMask _enemyLayerMask = 1 << 7;
+
+        // ------------------------------------------------
 
         [BoxGroup("ターゲット")]
         [Tooltip("ターゲットの方を向いているか")]
@@ -101,20 +112,12 @@ namespace TowerDefenseRemake.Turret
             set => _lockOn = value;
         }
 
-        [BoxGroup("ターゲット")]
-        [Tooltip("ターゲットのレイヤー")]
-        [SerializeField]
-        protected LayerMask _enemyLayerMask = 1 << 7;
-
         // ターゲットのList
         private List<GameObject> _targetList = new List<GameObject>();
         private GameObject _currentTarget = null;
         private IDamageable _currentTargetInfo = null;
 
-        // TODO:ScriptableObjectにステータスを保存
-
-
-
+        // ------------------------------------------------
 
         [BoxGroup("UI")]
         [Tooltip("タレットのキャンバス")]
@@ -126,20 +129,12 @@ namespace TowerDefenseRemake.Turret
         [SerializeField]
         CanvasDisableButton _disableButton;
 
-
+        // ------------------------------------------------
 
         [BoxGroup("コンテンツ")]
         [Tooltip("コンテンツリスト")]
         [SerializeField]
         private ConstructableContentList _contentList;
-
-        [BoxGroup("コンテンツ")]
-        [Tooltip("コンテンツタイプ")]
-        [ValueDropdown(nameof(ContentTypes), IsUniqueList = true)]
-        [SerializeField]
-        protected ParamType[] _contentTypes;
-
-        private static IEnumerable<ParamType> ContentTypes = Enumerable.Range(0, System.Enum.GetValues(typeof(ParamType)).Length).Cast<ParamType>();
 
         List<ConstructableUpgradeContent> _contentInsts = new List<ConstructableUpgradeContent>();
 
@@ -153,8 +148,7 @@ namespace TowerDefenseRemake.Turret
         [SerializeField]
         RectTransform _upgradeCanvasRT;
 
-
-
+        // ------------------------------------------------
 
         protected virtual void Start()
         {
@@ -177,8 +171,7 @@ namespace TowerDefenseRemake.Turret
                 .AddTo(this);
 
             // クールタイムありで発射(発射間隔の更新のたびに呼び出される)
-
-            CurrentParams[ParamType.Range].ParamValue
+            CurrentParams[ParamType.Interval].ParamValue
                 .Select(x => Observable.EveryUpdate().Where(_ => LockOn && _currentTargetInfo != null && Constructed).ThrottleFirst(TimeSpan.FromSeconds(x)))
                 .Switch()
                 .Subscribe(_ =>
@@ -186,7 +179,6 @@ namespace TowerDefenseRemake.Turret
                     Fire();
                 })
                 .AddTo(this);
-
 
             // Disableボタン
             _disableButton.OnClick += async () =>
@@ -212,9 +204,9 @@ namespace TowerDefenseRemake.Turret
         {
             // 範囲のGizmos
             Gizmos.color = Color.blue;
-            if(CurrentParams.TryGetValue(ParamType.Range,out ConstructLevel rangeValue))
+            if (CurrentParams.TryGetValue(ParamType.Range, out ConstructLevel rangeValue))
             {
-                Gizmos.DrawWireSphere(_appearance.position, rangeValue.ParamValue.Value);
+                Gizmos.DrawWireSphere(_appearance.position, rangeValue.ParamValue.Value * _cellSize);
             }
         }
 #endif
@@ -225,7 +217,6 @@ namespace TowerDefenseRemake.Turret
         public virtual void Fire()
         {
             // TODO:スマートにする
-
             // ターゲットを攻撃
             if (CurrentParams.TryGetValue(ParamType.Stan, out ConstructLevel temp))
             {
@@ -257,7 +248,7 @@ namespace TowerDefenseRemake.Turret
         protected virtual bool FindTarget()
         {
             // 衝突情報とゲームオブジェクト
-            RaycastHit[] hits = Physics.SphereCastAll(_appearance.position, CurrentParams[ParamType.Range].ParamValue.Value, Vector3.up, 0, _enemyLayerMask);
+            RaycastHit[] hits = Physics.SphereCastAll(_appearance.position, CurrentParams[ParamType.Range].ParamValue.Value * _cellSize, Vector3.up, 0.001f, _enemyLayerMask);
             List<GameObject> hitsGO = new List<GameObject>();
             foreach (RaycastHit hit in hits)
             {
@@ -323,48 +314,58 @@ namespace TowerDefenseRemake.Turret
         // ------------------------------------------------------------------------------------------
         // アップグレード
         // ------------------------------------------------------------------------------------------
+        /// <summary>
+        /// コンテンツの生成
+        /// </summary>
         private void GenerateUpgradeContent()
         {
-            foreach (ParamType content in Enumerable.Range(0, System.Enum.GetValues(typeof(ParamType)).Length).Cast<ParamType>())
+            foreach (ParamType content in Info.ParamTypes)
             {
                 ConstructableUpgradeContent contentInst = Instantiate(_contentList.Content[(int)content], _upgradeContentParent);
                 _contentInsts.Add(contentInst);
 
                 contentInst.ContentType = content;
 
-                contentInst.OnClickButton += UpgradeParam;
+                contentInst.OnClickButton += UpgradeParams;
             }
         }
 
-        void UpgradeParam(ParamType type, int raiseLevel)
+        /// <summary>
+        /// パラメータの更新
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="raiseLevel"></param>
+        void UpgradeParams(ParamType type, int raiseLevel)
         {
-            CurrentParams[type] = new ConstructLevel(CurrentParams[type].Level + raiseLevel, 0);
+            int nextLevel = CurrentParams[type].Level + raiseLevel;
+            int maxlevel = Info.Max[type].Level;
 
-            Debug.Log($"{gameObject.name}の{type.ToString()}レベルを{raiseLevel}上げた。");
+            if (maxlevel == CurrentParams[type].Level)
+            {
+                Debug.Log($"{gameObject.name}の{type.ToString()}は最大レベルです。");
+            }
+            else if (maxlevel >= nextLevel)
+            {
+                CurrentParams[type].ChangeLevel(nextLevel, TurretUpgradeCalcurator.CalcurateNormal(Info, type, nextLevel));
+
+                Debug.Log($"{gameObject.name}の{type.ToString()}レベルを{CurrentParams[type].Level}に上げました。");
+            }
+            else
+            {
+                CurrentParams[type].ChangeLevel(maxlevel, TurretUpgradeCalcurator.CalcurateNormal(Info, type, maxlevel));
+
+                Debug.Log($"{gameObject.name}の{type.ToString()}を最大レベルまで上げました。");
+            }
         }
 
+        /// <summary>
+        /// パラメータの初期化
+        /// </summary>
         void InitializeParams()
         {
-            // TODO:ちゃんと書く
-            foreach (ParamType type in _contentTypes)
+            foreach (ParamType type in Info.ParamTypes)
             {
-                float a = 0;
-                switch (type)
-                {
-                    case ParamType.Power:
-                        a = 100;
-                        break;
-                    case ParamType.Range:
-                        a = 20;
-                        break;
-                    case ParamType.Interval:
-                        a = 5;
-                        break;
-                    case ParamType.Stan:
-                        a = 0;
-                        break;
-                }
-                CurrentParams.Add(type, new ConstructLevel(0, a));
+                CurrentParams.Add(type, Info.InitialParam[type]);
             }
         }
 
@@ -375,11 +376,11 @@ namespace TowerDefenseRemake.Turret
         {
             List<GameObject> cellsGO = new List<GameObject>();
 
-            for (int j = 0; j < ConstructableMatrix.Column; j++)
+            for (int j = 0; j < CurrentMatrix.Column; j++)
             {
-                for (int i = 0; i < ConstructableMatrix.Row; i++)
+                for (int i = 0; i < CurrentMatrix.Row; i++)
                 {
-                    Vector3 rayPos = transform.position + new Vector3(_cellSize / 2 * (-ConstructableMatrix.Row + 1) + _cellSize * i, 0.5f, _cellSize / 2 * (ConstructableMatrix.Column - 1) - _cellSize * j);
+                    Vector3 rayPos = transform.position + new Vector3(_cellSize / 2 * (-CurrentMatrix.Row + 1) + _cellSize * i, 0.5f, _cellSize / 2 * (CurrentMatrix.Column - 1) - _cellSize * j);
 
                     if (Physics.Raycast(new Ray(rayPos, -transform.up), out RaycastHit hit, Mathf.Infinity, _cellMask))
                     {
@@ -415,7 +416,7 @@ namespace TowerDefenseRemake.Turret
                     cellBehaviour.ConstructableExist = true;
                 }
 
-                transform.position = centerPos / ConstructableMatrix.Column / ConstructableMatrix.Row + transform.up * _cellSize / 2;
+                transform.position = centerPos / CurrentMatrix.Column / CurrentMatrix.Row + transform.up * _cellSize / 2;
 
                 // TODO:本当に建築するか確認する
 
@@ -477,6 +478,14 @@ namespace TowerDefenseRemake.Turret
             Constructable = con;
         }
 
+        /// <summary>
+        /// 建築物を売る
+        /// </summary>
+        private void SellConstructable()
+        {
+
+        }
+
         // ------------------------------------------------------------------------------------------
         // Interactableインターフェース
         // ------------------------------------------------------------------------------------------
@@ -486,6 +495,7 @@ namespace TowerDefenseRemake.Turret
 
             Interactable = false;
 
+            // UIを表示
             if (Camera.main.WorldToScreenPoint(transform.position).x > Screen.width / 2)
             {
                 _upgradeCanvasRT.anchoredPosition = new Vector2(-Screen.width * 0.75f, 0);
@@ -502,19 +512,6 @@ namespace TowerDefenseRemake.Turret
             }
             _disableButton.Interactable = true;
             _infoCanvas.gameObject.SetActive(true);
-
-            foreach (ParamType content in
-                Enumerable.Range(0, System.Enum.GetValues(typeof(ParamType)).Length).Cast<ParamType>())
-            {
-                if (_contentTypes.Contains(content))
-                {
-                    _contentInsts[(int)content].gameObject.SetActive(true);
-                }
-                else
-                {
-                    _contentInsts[(int)content].gameObject.SetActive(false);
-                }
-            }
         }
 
         public virtual void OnPointerEnter(PointerEventData eventData)

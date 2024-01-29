@@ -2,12 +2,12 @@ using Sirenix.OdinInspector;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using TowerDefenseRemake.Construction;
+using TowerDefenseRemake.Constructable;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace TowerDefenseRemake.Turret
+namespace TowerDefenseRemake.Constructable
 {
     [CreateAssetMenu(menuName = "My Scriptable/Constructable/Create ConstructableInfo")]
     public class ConstructableInfo : ScriptableObject
@@ -16,29 +16,53 @@ namespace TowerDefenseRemake.Turret
 
         [BoxGroup("基本情報")]
         [Tooltip("名称")]
-        public string Name;
+        [SerializeField]
+        private string _name;
+        public string Name => _name;
 
         [BoxGroup("基本情報")]
         [Tooltip("アイコン")]
-        public Sprite Icon;
+        [SerializeField]
+        private Sprite _icon;
+        public Sprite Icon => _icon;
+
+        [BoxGroup("基本情報")]
+        [Tooltip("スケール")]
+        [SerializeField, InlineProperty]
+        private ConstructMatrix _matrix;
+        public ConstructMatrix Matrix { get => _matrix; }
 
         // --------------------------------------------------------------------------
 
         [BoxGroup("パラメータ")]
-        [Tooltip("所持パラメータ")]
+        [Tooltip("所持パラメータタイプ")]
         [ValueDropdown(nameof(ParamTypeCast), IsUniqueList = true)]
         [OnValueChanged(nameof(ParamTypesChanged))]
-        public ParamType[] ParamTypes;
+        [SerializeField, InlineProperty]
+        private ParamType[] _paramTypes;
+        public ParamType[] ParamTypes => _paramTypes;
 
         private static IEnumerable<ParamType> ParamTypeCast = Enumerable.Range(0, System.Enum.GetValues(typeof(ParamType)).Length).Cast<ParamType>();
 
         [BoxGroup("パラメータ")]
         [Tooltip("初期値")]
-        public SerializedDictionary<ParamType, ConstructLevel> InitialParam;
+        [SerializeField, InlineProperty]
+        private SerializedDictionary<ParamType, ConstructLevel> _initialParam;
+        public SerializedDictionary<ParamType, ConstructLevel> InitialParam => _initialParam;
 
         [BoxGroup("パラメータ")]
         [Tooltip("最大値")]
-        public SerializedDictionary<ParamType, int> MaxLevel;
+        [SerializeField, InlineProperty]
+        private SerializedDictionary<ParamType, ConstructLevel> _max;
+        public SerializedDictionary<ParamType, ConstructLevel> Max => _max;
+
+        [BoxGroup("パラメータ")]
+        [Tooltip("上がり幅")]
+        [SerializeField, InlineProperty]
+        private SerializedDictionary<ParamType, ConstructableUpgradeRate> _increaseRate;
+        public SerializedDictionary<ParamType, ConstructableUpgradeRate> IncreaseRate => _increaseRate;
+
+        // --------------------------------------------------------------------------
 
         void ParamTypesChanged()
         {
@@ -50,15 +74,20 @@ namespace TowerDefenseRemake.Turret
                     {
                         InitialParam.Add(paramType, new ConstructLevel(0, 0));
                     }
-                    if (!MaxLevel.ContainsKey(paramType))
+                    if (!Max.ContainsKey(paramType))
                     {
-                        MaxLevel.Add(paramType, 0);
+                        Max.Add(paramType, new ConstructLevel(0, 0));
+                    }
+                    if (!IncreaseRate.ContainsKey(paramType))
+                    {
+                        IncreaseRate.Add(paramType, new ConstructableUpgradeRate(0, 0));
                     }
                 }
                 else
                 {
                     InitialParam.Remove(paramType);
-                    MaxLevel.Remove(paramType);
+                    Max.Remove(paramType);
+                    IncreaseRate.Remove(paramType);
                 }
             }
         }

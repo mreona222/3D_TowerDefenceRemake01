@@ -12,21 +12,42 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 602dd1ad8ea3d574baa527f82db28889, type: 3}
   m_Name: TurretNormal
   m_EditorClassIdentifier: 
-  Name: TurretNormal
-  Icon: {fileID: 0}
-  ParamTypes: 000000000100000002000000
-  InitialParam:
+  _name: Nomal Turret
+  _icon: {fileID: 0}
+  _matrix:
+    Row: 1
+    Column: 1
+  _paramTypes: 000000000100000002000000
+  _initialParam:
     m_Keys: 000000000100000002000000
     m_Values:
+    - Level: 2
+      ParamValue:
+        value: 169.73082
     - Level: 0
       ParamValue:
-        value: 100
-    - Level: 0
+        value: 1
+    - Level: 10
       ParamValue:
-        value: 20
-    - Level: 0
-      ParamValue:
-        value: 5
-  MaxLevel:
+        value: 1
+  _max:
     m_Keys: 000000000100000002000000
-    m_Values: 0f2700000a0000000a000000
+    m_Values:
+    - Level: 9999
+      ParamValue:
+        value: Infinity
+    - Level: 10
+      ParamValue:
+        value: 2
+    - Level: 10
+      ParamValue:
+        value: 1
+  _increaseRate:
+    m_Keys: 000000000100000002000000
+    m_Values:
+    - Ratio: 0.14
+      Pow: 1.4
+    - Ratio: 1
+      Pow: 1
+    - Ratio: 1
+      Pow: 1

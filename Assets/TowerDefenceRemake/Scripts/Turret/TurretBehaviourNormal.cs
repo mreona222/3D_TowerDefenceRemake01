@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace TowerDefenseRemake.Turret
+namespace TowerDefenseRemake.Constructable.Turret
 {
     public class TurretBehaviourNormal : TurretBehaviourBase
     {

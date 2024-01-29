@@ -2,8 +2,8 @@ using Sirenix.OdinInspector;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using TowerDefenseRemake.Construction;
-using TowerDefenseRemake.Turret;
+using TowerDefenseRemake.Constructable;
+using TowerDefenseRemake.Constructable.Turret;
 using UniRx;
 using UniRx.Triggers;
 using UnityEngine;
@@ -64,11 +64,7 @@ namespace TowerDefenseRemake.UI
         }
 
         // タレットの回転
-        public bool Rotate
-        {
-            get;
-            set;
-        }
+        public bool Rotate { get; set; }
 
 
         protected override void Start()
@@ -116,9 +112,11 @@ namespace TowerDefenseRemake.UI
 
                             if (Rotate)
                             {
-                                int tempRow = _turretInst.ConstructableMatrix.Row;
-                                int tempColumn = _turretInst.ConstructableMatrix.Column;
-                                _turretInst.ConstructableMatrix = new ConstructMatrix(tempColumn, tempRow);
+                                _turretInst.CurrentMatrix = _turretInst.Info.Matrix.InverseMatrix();
+                            }
+                            else
+                            {
+                                _turretInst.CurrentMatrix = _turretInst.Info.Matrix;
                             }
 
                             // タレットの移動

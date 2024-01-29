@@ -1,8 +1,8 @@
 using Cysharp.Threading.Tasks;
 using System.Collections;
 using System.Collections.Generic;
+using TowerDefenseRemake.Constructable;
 using TowerDefenseRemake.Grid;
-using TowerDefenseRemake.Turret;
 using UnityEngine;
 
 namespace TowerDefenseRemake.UI
@@ -38,6 +38,12 @@ namespace TowerDefenseRemake.UI
                 ConstructableGeneratorButton buttonInst = Instantiate(_generateButtonPrefab, _content);
                 buttonInst.Type = (ConstructableType)i;
 
+                // 回転情報
+                _rotateButton.OnClick += () =>
+                {
+                    buttonInst.Rotate = !buttonInst.Rotate;
+                };
+
                 // ドラッグ開始コールバック
                 buttonInst.OnEnterDragAction += () =>
                 {
@@ -47,8 +53,6 @@ namespace TowerDefenseRemake.UI
                         UniTask.Create(async () => await _handle.HideMenu());
                     }
 
-                    // 回転情報
-                    buttonInst.Rotate = _rotateButton.Rotate;
 
                     // セルを光らせる
                     foreach (GridCellBehaviour cell in _allCells)

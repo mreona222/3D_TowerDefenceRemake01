@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -7,26 +8,18 @@ namespace TowerDefenseRemake.UI
 {
     public class ConstructableRotateButton : ButtonBase
     {
-        [SerializeField]
-        private bool _rotate;
-        public bool Rotate
+        private event Action _onClick;
+        public event Action OnClick
         {
-            get => _rotate;
-            set => _rotate = value;
+            add { _onClick += value; }
+            remove { _onClick -= value; }
         }
 
         protected override void OnPointerClickInternal(PointerEventData eventData)
         {
             base.OnPointerClickInternal(eventData);
 
-            if (Rotate)
-            {
-                Rotate = false;
-            }
-            else
-            {
-                Rotate = true;
-            }
+            _onClick?.Invoke();
         }
     }
 }

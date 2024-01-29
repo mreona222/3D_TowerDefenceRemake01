@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
+using TowerDefenseRemake.Constructable.Turret;
 using UnityEngine;
 
-namespace TowerDefenseRemake.Turret
+namespace TowerDefenseRemake.Constructable
 {
     public enum ConstructableType
     {
