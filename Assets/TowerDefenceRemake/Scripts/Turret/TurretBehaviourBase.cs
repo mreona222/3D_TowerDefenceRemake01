@@ -16,8 +16,10 @@ using UniRx.Diagnostics;
 using UniRx.Triggers;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Assertions.Must;
 using UnityEngine.EventSystems;
 using UnityEngine.Rendering;
+using UnityEngine.UI;
 using static UnityEngine.Rendering.DebugUI.Table;
 
 namespace TowerDefenseRemake.Constructable.Turret
@@ -136,7 +138,7 @@ namespace TowerDefenseRemake.Constructable.Turret
         [SerializeField]
         private ConstructableContentList _contentList;
 
-        List<ConstructableUpgradeContent> _contentInsts = new List<ConstructableUpgradeContent>();
+        Dictionary<ParamType, ConstructableUpgradeContent> _contentInsts = new Dictionary<ParamType, ConstructableUpgradeContent>();
 
         [BoxGroup("コンテンツ")]
         [Tooltip("コンテンツの親")]
@@ -155,7 +157,7 @@ namespace TowerDefenseRemake.Constructable.Turret
             _anim = _appearance.gameObject.GetComponent<Animator>();
 
             // UpgradeContent作成
-            GenerateUpgradeContent();
+            GenerateContent();
 
             // パラメータの初期化
             InitializeParams();
@@ -167,16 +169,6 @@ namespace TowerDefenseRemake.Constructable.Turret
                 .Subscribe(_ =>
                 {
                     LookAtTarget();
-                })
-                .AddTo(this);
-
-            // クールタイムありで発射(発射間隔の更新のたびに呼び出される)
-            CurrentParams[ParamType.Interval].ParamValue
-                .Select(x => Observable.EveryUpdate().Where(_ => LockOn && _currentTargetInfo != null && Constructed).ThrottleFirst(TimeSpan.FromSeconds(x)))
-                .Switch()
-                .Subscribe(_ =>
-                {
-                    Fire();
                 })
                 .AddTo(this);
 
@@ -312,30 +304,54 @@ namespace TowerDefenseRemake.Constructable.Turret
         }
 
         // ------------------------------------------------------------------------------------------
-        // アップグレード
+        // UI
         // ------------------------------------------------------------------------------------------
         /// <summary>
         /// コンテンツの生成
         /// </summary>
-        private void GenerateUpgradeContent()
+        private void GenerateContent()
         {
             foreach (ParamType content in Info.ParamTypes)
             {
-                ConstructableUpgradeContent contentInst = Instantiate(_contentList.Content[(int)content], _upgradeContentParent);
-                _contentInsts.Add(contentInst);
+                _contentInsts.Add(content, Instantiate(_contentList.Content[(int)content], _upgradeContentParent));
 
-                contentInst.ContentType = content;
+                _contentInsts[content].ContentType = content;
 
-                contentInst.OnClickButton += UpgradeParams;
+                _contentInsts[content].OnUpdateCurrentParams += UpgradeParams;
+                _contentInsts[content].OnUpdateNextParams += CalcurateNext;
             }
         }
 
+        private (float value, float cost) CalcurateNext(ParamType type, int raiseLevel)
+        {
+            int nextLevel = CurrentParams[type].Level + raiseLevel;
+
+            float nextValue = TurretUpgradeCalcurator.CalcurateNormal(Info, type, nextLevel);
+
+            // TODO:コストを計算する（丸める）
+            switch (_contentInsts[type].DropdownType)
+            {
+                case ConstructableUpgradeContent.DropdownTypeEnum.DPS:
+                    if (type == ParamType.Power) nextValue /= CurrentParams[ParamType.Interval].ParamValue.Value;
+                    else if (type == ParamType.Interval) nextValue = CurrentParams[ParamType.Power].ParamValue.Value / nextValue;
+                    break;
+
+                default:
+                    break;
+            }
+
+            return (nextValue, raiseLevel);
+        }
+
+        // ------------------------------------------------------------------------------------------
+        // アップグレード
+        // ------------------------------------------------------------------------------------------
         /// <summary>
         /// パラメータの更新
         /// </summary>
         /// <param name="type"></param>
         /// <param name="raiseLevel"></param>
-        void UpgradeParams(ParamType type, int raiseLevel)
+        float UpgradeParams(ParamType type, int raiseLevel)
         {
             int nextLevel = CurrentParams[type].Level + raiseLevel;
             int maxlevel = Info.Max[type].Level;
@@ -356,6 +372,21 @@ namespace TowerDefenseRemake.Constructable.Turret
 
                 Debug.Log($"{gameObject.name}の{type.ToString()}を最大レベルまで上げました。");
             }
+
+            float currentValue = CurrentParams[type].ParamValue.Value;
+
+            switch (_contentInsts[type].DropdownType)
+            {
+                case ConstructableUpgradeContent.DropdownTypeEnum.DPS:
+                    if (type == ParamType.Power) currentValue /= CurrentParams[ParamType.Interval].ParamValue.Value;
+                    else if (type == ParamType.Interval) currentValue = CurrentParams[ParamType.Power].ParamValue.Value / currentValue;
+                    break;
+
+                default:
+                    break;
+            }
+
+            return currentValue;
         }
 
         /// <summary>
@@ -365,7 +396,20 @@ namespace TowerDefenseRemake.Constructable.Turret
         {
             foreach (ParamType type in Info.ParamTypes)
             {
-                CurrentParams.Add(type, Info.InitialParam[type]);
+                CurrentParams.Add(type, new ConstructLevel(Info.InitialParam[type].Level, Info.InitialParam[type].ParamValue.Value));
+
+                // クールタイムありで発射(発射間隔の更新のたびに呼び出される)
+                if (type == ParamType.Interval)
+                {
+                    CurrentParams[ParamType.Interval].ParamValue
+                        .Select(x => Observable.EveryUpdate().Where(_ => LockOn && _currentTargetInfo != null && Constructed).ThrottleFirst(TimeSpan.FromSeconds(x)))
+                        .Switch()
+                        .Subscribe(_ =>
+                        {
+                            Fire();
+                        })
+                        .AddTo(this);
+                }
             }
         }
 
@@ -512,6 +556,10 @@ namespace TowerDefenseRemake.Constructable.Turret
             }
             _disableButton.Interactable = true;
             _infoCanvas.gameObject.SetActive(true);
+            foreach (var scroll in GetComponentsInChildren<ScrollRect>(true))
+            {
+                scroll.verticalNormalizedPosition = 1.0f;
+            }
         }
 
         public virtual void OnPointerEnter(PointerEventData eventData)

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace TowerDefenseRemake.Constructable
 {
-    public enum ConstructableType
+    public enum ConstructableName
     {
         Normal,
         Gatling,

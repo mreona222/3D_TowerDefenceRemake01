@@ -32,11 +32,11 @@ namespace TowerDefenseRemake.UI
 
         void GenerateButtons()
         {
-            for (int i = 0; i < System.Enum.GetValues(typeof(ConstructableType)).Length; i++)
+            for (int i = 0; i < System.Enum.GetValues(typeof(ConstructableName)).Length; i++)
             {
                 // ボタンを生成
                 ConstructableGeneratorButton buttonInst = Instantiate(_generateButtonPrefab, _content);
-                buttonInst.Type = (ConstructableType)i;
+                buttonInst.Type = (ConstructableName)i;
 
                 // 回転情報
                 _rotateButton.OnClick += () =>

@@ -15,39 +15,55 @@ MonoBehaviour:
   _name: Nomal Turret
   _icon: {fileID: 0}
   _matrix:
-    Row: 1
-    Column: 1
+    _row: 1
+    _column: 1
   _paramTypes: 000000000100000002000000
   _initialParam:
     m_Keys: 000000000100000002000000
     m_Values:
-    - Level: 2
-      ParamValue:
-        value: 169.73082
-    - Level: 0
-      ParamValue:
+    - _level: 0
+      _paramValue:
+        value: 100
+    - _level: 0
+      _paramValue:
         value: 1
-    - Level: 10
-      ParamValue:
-        value: 1
+    - _level: 0
+      _paramValue:
+        value: 5
   _max:
     m_Keys: 000000000100000002000000
     m_Values:
-    - Level: 9999
-      ParamValue:
+    - _level: 9999
+      _paramValue:
         value: Infinity
-    - Level: 10
-      ParamValue:
+    - _level: 10
+      _paramValue:
         value: 2
-    - Level: 10
-      ParamValue:
+    - _level: 10
+      _paramValue:
         value: 1
   _increaseRate:
     m_Keys: 000000000100000002000000
     m_Values:
-    - Ratio: 0.14
-      Pow: 1.4
-    - Ratio: 1
-      Pow: 1
-    - Ratio: 1
-      Pow: 1
+    - _ratio: 0.14
+      _pow: 1.4
+    - _ratio: 1
+      _pow: 1
+    - _ratio: 1
+      _pow: 1
+  _stuff: 1
+  _coin:
+    m_Keys: 000000000100000002000000
+    m_Values:
+    - _initialCoin: 1000
+      _coinCost:
+        _ratio: 1
+        _pow: 1
+    - _initialCoin: 3000
+      _coinCost:
+        _ratio: 1
+        _pow: 1
+    - _initialCoin: 3000
+      _coinCost:
+        _ratio: 1
+        _pow: 1

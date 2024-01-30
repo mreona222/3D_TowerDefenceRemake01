@@ -24,7 +24,7 @@ namespace TowerDefenseRemake.UI
 
 
 
-        public ConstructableType Type { get; set; }
+        public ConstructableName Type { get; set; }
 
         [BoxGroup("タレット")]
         [SerializeField]

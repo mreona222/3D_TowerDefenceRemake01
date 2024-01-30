@@ -38,7 +38,7 @@ namespace TowerDefenseRemake.Constructable
         [Tooltip("所持パラメータタイプ")]
         [ValueDropdown(nameof(ParamTypeCast), IsUniqueList = true)]
         [OnValueChanged(nameof(ParamTypesChanged))]
-        [SerializeField, InlineProperty]
+        [SerializeField]
         private ParamType[] _paramTypes;
         public ParamType[] ParamTypes => _paramTypes;
 
@@ -46,21 +46,35 @@ namespace TowerDefenseRemake.Constructable
 
         [BoxGroup("パラメータ")]
         [Tooltip("初期値")]
-        [SerializeField, InlineProperty]
+        [SerializeField]
         private SerializedDictionary<ParamType, ConstructLevel> _initialParam;
         public SerializedDictionary<ParamType, ConstructLevel> InitialParam => _initialParam;
 
         [BoxGroup("パラメータ")]
         [Tooltip("最大値")]
-        [SerializeField, InlineProperty]
+        [SerializeField]
         private SerializedDictionary<ParamType, ConstructLevel> _max;
         public SerializedDictionary<ParamType, ConstructLevel> Max => _max;
 
         [BoxGroup("パラメータ")]
         [Tooltip("上がり幅")]
-        [SerializeField, InlineProperty]
+        [SerializeField]
         private SerializedDictionary<ParamType, ConstructableUpgradeRate> _increaseRate;
         public SerializedDictionary<ParamType, ConstructableUpgradeRate> IncreaseRate => _increaseRate;
+
+        // --------------------------------------------------------------------------
+
+        [BoxGroup("コスト")]
+        [Tooltip("Stuff")]
+        [SerializeField]
+        private int _stuff;
+        public int Stuff => _stuff;
+
+        [BoxGroup("コスト")]
+        [Tooltip("Coin")]
+        [SerializeField]
+        private SerializedDictionary<ParamType, ConstructableCost> _coin;
+        public SerializedDictionary<ParamType, ConstructableCost> Coin => _coin;
 
         // --------------------------------------------------------------------------
 
@@ -82,12 +96,17 @@ namespace TowerDefenseRemake.Constructable
                     {
                         IncreaseRate.Add(paramType, new ConstructableUpgradeRate(0, 0));
                     }
+                    if (!Coin.ContainsKey(paramType))
+                    {
+                        Coin.Add(paramType, new ConstructableCost(0, 0, new ConstructableUpgradeRate(0, 0)));
+                    }
                 }
                 else
                 {
                     InitialParam.Remove(paramType);
                     Max.Remove(paramType);
                     IncreaseRate.Remove(paramType);
+                    Coin.Remove(paramType);
                 }
             }
         }

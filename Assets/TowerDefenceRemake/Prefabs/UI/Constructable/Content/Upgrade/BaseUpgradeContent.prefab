@@ -172,6 +172,10 @@ MonoBehaviour:
   - {fileID: 5213961878311263021}
   - {fileID: 4330215552451990090}
   - {fileID: 3007891564116539865}
+  _currentValue: {fileID: 1569710959084644241}
+  _nextValue: {fileID: 1438298362539999058}
+  _cost: {fileID: 6836142021842695087}
+  _dropdown: {fileID: 7990809756306130846}
 --- !u!1 &235328202712392312
 GameObject:
   m_ObjectHideFlags: 0
@@ -4328,7 +4332,20 @@ MonoBehaviour:
       m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2329217527132077114}
+        m_TargetAssemblyTypeName: TowerDefenseRemake.UI.ConstructableUpgradeContent,
+          Assembly-CSharp
+        m_MethodName: OnValueChanged
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   m_AlphaFadeSpeed: 0.15
 --- !u!1 &8406802990793848399
 GameObject:

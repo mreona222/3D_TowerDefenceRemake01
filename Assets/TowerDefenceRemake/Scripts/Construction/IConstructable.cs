@@ -12,14 +12,17 @@ namespace TowerDefenseRemake.Constructable
     public class ConstructMatrix
     {
         [SerializeField]
-        public int Row;
+        private int _row;
+        public int Row => _row;
+
         [SerializeField]
-        public int Column;
+        private int _column;
+        public int Column => _column;
 
         public ConstructMatrix(int row, int column)
         {
-            this.Row = row;
-            this.Column = column;
+            this._row = row;
+            this._column = column;
         }
 
         public ConstructMatrix InverseMatrix()
@@ -32,37 +35,62 @@ namespace TowerDefenseRemake.Constructable
     public class ConstructLevel
     {
         [SerializeField]
-        public int Level;
+        private int _level;
+        public int Level => _level;
+
         [SerializeField, InlineProperty]
-        public ReactiveProperty<float> ParamValue;
+        private ReactiveProperty<float> _paramValue;
+        public ReactiveProperty<float> ParamValue => _paramValue;
 
         public ConstructLevel(int level, float value)
         {
-            this.Level = level;
-            this.ParamValue = new ReactiveProperty<float>(value);
+            this._level = level;
+            this._paramValue = new ReactiveProperty<float>(value);
         }
 
         public void ChangeLevel(int level, float value)
         {
-            this.Level = level;
-            this.ParamValue.Value = value;
+            this._level = level;
+            this._paramValue.Value = value;
+        }
+    }
+
+    [Serializable, InlineProperty]
+    public class ConstructableUpgradeRate
+    {
+        [SerializeField, InlineProperty]
+        private float _ratio;
+        public float Ratio => _ratio;
+
+        [SerializeField, InlineProperty]
+        private float _pow;
+        public float Pow => _pow;
+
+        public ConstructableUpgradeRate(float ratio, float pow)
+        {
+            this._ratio = ratio;
+            this._pow = pow;
         }
     }
 
     [Serializable]
-    public class ConstructableUpgradeRate
+    public class ConstructableCost
     {
         [SerializeField]
-        public float Ratio;
-        [SerializeField, InlineProperty]
-        public float Pow;
+        private float _initialCoin;
+        public float InitialCoin => _initialCoin;
 
-        public ConstructableUpgradeRate(float ratio, float pow)
+        [SerializeField]
+        private ConstructableUpgradeRate _coinCost;
+        public ConstructableUpgradeRate CoinCost => _coinCost;
+
+        public ConstructableCost(float initialStuff, float initialCoin, ConstructableUpgradeRate coinCost)
         {
-            this.Ratio = ratio;
-            this.Pow = pow;
+            this._initialCoin = initialCoin;
+            this._coinCost = coinCost;
         }
     }
+
 
 
     public enum ParamType
