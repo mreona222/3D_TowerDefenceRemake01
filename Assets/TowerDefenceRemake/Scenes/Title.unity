@@ -500,6 +500,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2d79a6f7ccfd52c41b1558cd8d229b60, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _interactable: 1
   buttons:
   - {fileID: 980077885}
   - {fileID: 942821621}
@@ -508,7 +509,7 @@ MonoBehaviour:
   _downColor: {r: 1, g: 0, b: 0, a: 1}
   _enterColor: {r: 0, g: 1, b: 0, a: 1}
   _exitColor: {r: 1, g: 1, b: 1, a: 1}
-  menu: 1
+  _menu: 1
 --- !u!114 &942821622
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -689,6 +690,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: daf39c772e50a524298d3adb957d94f5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _interactable: 1
   buttons:
   - {fileID: 980077885}
   - {fileID: 942821621}

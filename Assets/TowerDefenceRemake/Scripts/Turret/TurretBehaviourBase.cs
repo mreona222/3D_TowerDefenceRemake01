@@ -8,7 +8,7 @@ using System.Linq;
 using System.Net.Mime;
 using TowerDefenseRemake.Damage;
 using TowerDefenseRemake.Grid;
-using TowerDefenseRemake.Interaction;
+using Template.Interaction;
 using TowerDefenseRemake.Manager;
 using TowerDefenseRemake.UI;
 using UniRx;
@@ -24,7 +24,7 @@ using static UnityEngine.Rendering.DebugUI.Table;
 
 namespace TowerDefenseRemake.Constructable.Turret
 {
-    public abstract class TurretBehaviourBase : MonoBehaviour, IConstructable, IInteractable
+    public abstract class TurretBehaviourBase : MonoBehaviour, IConstructable, IPointerInteractable
     {
         // ------------------------------------------------
         [BoxGroup("ステート")]
@@ -156,11 +156,11 @@ namespace TowerDefenseRemake.Constructable.Turret
         {
             _anim = _appearance.gameObject.GetComponent<Animator>();
 
-            // UpgradeContent作成
-            GenerateContent();
-
             // パラメータの初期化
             InitializeParams();
+
+            // UpgradeContent作成
+            GenerateContent();
 
             // ターゲットのほうを向く
             this
@@ -317,78 +317,54 @@ namespace TowerDefenseRemake.Constructable.Turret
 
                 _contentInsts[content].ContentType = content;
 
-                _contentInsts[content].OnUpdateCurrentParams += UpgradeParams;
-                _contentInsts[content].OnUpdateNextParams += CalcurateNext;
+                _contentInsts[content].OnUpdateParams += UpgradeParams;
+                _contentInsts[content].OnUpdateParams += UpdateContent;
             }
+
+            UpdateContent(ParamType.Power, 0);
         }
 
-        private (float value, float cost) CalcurateNext(ParamType type, int raiseLevel)
+        private void UpdateContent(ParamType type, int raiseLevel)
         {
-            int nextLevel = CurrentParams[type].Level + raiseLevel;
-
-            float nextValue = TurretUpgradeCalcurator.CalcurateNormal(Info, type, nextLevel);
-
-            // TODO:コストを計算する（丸める）
-            switch (_contentInsts[type].DropdownType)
+            foreach (ConstructableUpgradeContent content in _contentInsts.Values)
             {
-                case ConstructableUpgradeContent.DropdownTypeEnum.DPS:
-                    if (type == ParamType.Power) nextValue /= CurrentParams[ParamType.Interval].ParamValue.Value;
-                    else if (type == ParamType.Interval) nextValue = CurrentParams[ParamType.Power].ParamValue.Value / nextValue;
-                    break;
+                foreach (ConstructableUpgradeButton button in content.Buttons)
+                {
+                    int nextLevel = CurrentParams[content.ContentType].Level + button.RaiseLevel;
 
-                default:
-                    break;
+                    button.CurrentValue = CurrentParams[content.ContentType].ParamValue.Value;
+                    button.NextValue = TurretUpgradeCalcurator.CalcurateNormal(Info, content.ContentType, nextLevel);
+
+                    if (content.ContentType == ParamType.Power)
+                    {
+                        float currentInterval = CurrentParams[ParamType.Interval].ParamValue.Value;
+
+                        button.CurrentDPS = button.CurrentValue / currentInterval;
+                        button.NextDPS = button.NextValue / currentInterval;
+                    }
+                    else if (content.ContentType == ParamType.Interval)
+                    {
+                        float currentPower = CurrentParams[ParamType.Power].ParamValue.Value;
+
+                        button.CurrentDPS = currentPower / button.CurrentValue;
+                        button.NextDPS = currentPower / button.NextValue;
+                    }
+
+                    button.Coin = button.RaiseLevel;
+                }
+
+                content.ChangeTextCurrent(0);
+                content.ChangeTextNext(0);
             }
 
-            return (nextValue, raiseLevel);
+            foreach (ConstructableUpgradeContent content in _contentInsts.Values)
+            {
+            }
         }
 
         // ------------------------------------------------------------------------------------------
         // アップグレード
         // ------------------------------------------------------------------------------------------
-        /// <summary>
-        /// パラメータの更新
-        /// </summary>
-        /// <param name="type"></param>
-        /// <param name="raiseLevel"></param>
-        float UpgradeParams(ParamType type, int raiseLevel)
-        {
-            int nextLevel = CurrentParams[type].Level + raiseLevel;
-            int maxlevel = Info.Max[type].Level;
-
-            if (maxlevel == CurrentParams[type].Level)
-            {
-                Debug.Log($"{gameObject.name}の{type.ToString()}は最大レベルです。");
-            }
-            else if (maxlevel >= nextLevel)
-            {
-                CurrentParams[type].ChangeLevel(nextLevel, TurretUpgradeCalcurator.CalcurateNormal(Info, type, nextLevel));
-
-                Debug.Log($"{gameObject.name}の{type.ToString()}レベルを{CurrentParams[type].Level}に上げました。");
-            }
-            else
-            {
-                CurrentParams[type].ChangeLevel(maxlevel, TurretUpgradeCalcurator.CalcurateNormal(Info, type, maxlevel));
-
-                Debug.Log($"{gameObject.name}の{type.ToString()}を最大レベルまで上げました。");
-            }
-
-            float currentValue = CurrentParams[type].ParamValue.Value;
-
-            switch (_contentInsts[type].DropdownType)
-            {
-                case ConstructableUpgradeContent.DropdownTypeEnum.DPS:
-                    if (type == ParamType.Power) currentValue /= CurrentParams[ParamType.Interval].ParamValue.Value;
-                    else if (type == ParamType.Interval) currentValue = CurrentParams[ParamType.Power].ParamValue.Value / currentValue;
-                    break;
-
-                default:
-                    break;
-            }
-
-            return currentValue;
-        }
-
         /// <summary>
         /// パラメータの初期化
         /// </summary>
@@ -410,6 +386,36 @@ namespace TowerDefenseRemake.Constructable.Turret
                         })
                         .AddTo(this);
                 }
+            }
+        }
+
+        /// <summary>
+        /// パラメータの更新
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="raiseLevel"></param>
+        void UpgradeParams(ParamType type, int raiseLevel)
+        {
+            int nextLevel = CurrentParams[type].Level + raiseLevel;
+            int maxlevel = Info.Max[type].Level;
+
+            if (maxlevel == CurrentParams[type].Level)
+            {
+                Debug.Log($"{gameObject.name}の{type.ToString()}は最大レベルです。");
+            }
+            else if (maxlevel >= nextLevel)
+            {
+                CurrentParams[type].ChangeLevel(nextLevel, TurretUpgradeCalcurator.CalcurateNormal(Info, type, nextLevel));
+
+                ((InstanceManagerBattle)GameManager.Instance._IM).Coin.Value -= (int)_contentInsts[type].Buttons[Array.IndexOf(ConstructableUpgradeButton.Level, raiseLevel)].Coin;
+
+                Debug.Log($"{gameObject.name}の{type.ToString()}レベルを{CurrentParams[type].Level}に上げました。");
+            }
+            else
+            {
+                CurrentParams[type].ChangeLevel(maxlevel, TurretUpgradeCalcurator.CalcurateNormal(Info, type, maxlevel));
+
+                Debug.Log($"{gameObject.name}の{type.ToString()}を最大レベルまで上げました。");
             }
         }
 

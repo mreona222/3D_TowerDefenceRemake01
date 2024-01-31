@@ -46,11 +46,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   loadingScreen: {fileID: 5688741287715374864}
-  ruleImage:
-  - {fileID: 0}
-  - {fileID: 2800000, guid: bb853a127ab7683478f5ec605538b867, type: 3}
-  - {fileID: 2800000, guid: 88e5601d0050f704daa8c27c17476794, type: 3}
-  - {fileID: 2800000, guid: 61462da75a3f13b4d93d7d753ebd1dc4, type: 3}
+  _ruleImage: {fileID: 11400000, guid: 88cb6035ca73918478b722f0f54f9dd1, type: 2}
 --- !u!1001 &3049276819987748447
 PrefabInstance:
   m_ObjectHideFlags: 0

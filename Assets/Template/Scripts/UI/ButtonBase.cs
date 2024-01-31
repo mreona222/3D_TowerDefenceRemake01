@@ -4,15 +4,15 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
-using TowerDefenseRemake.Interaction;
+using Template.Interaction;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
-namespace TowerDefenseRemake.UI 
+namespace Template.UI 
 {
     [RequireComponent(typeof(Image))]
-    public class ButtonBase : MonoBehaviour, IInteractable
+    public class ButtonBase : MonoBehaviour, IPointerInteractable
     {
         [BoxGroup("Base")]
         [SerializeField]

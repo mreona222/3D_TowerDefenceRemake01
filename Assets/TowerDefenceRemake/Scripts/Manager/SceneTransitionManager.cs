@@ -8,36 +8,29 @@ using DG.Tweening;
 using Template.Manager;
 using Fade;
 using UnityEditor;
+using Template.Rule;
+using System;
 
 namespace TowerDefenseRemake.Manager
 {
+    // TODO: enumを他のファイルにまとめる
+    public enum SceneEnum
+    {
+        Title,
+        Menu,
+        Battle01,
+
+    }
+
     public class SceneTransitionManager : ManagerBase<SceneTransitionManager>
     {
-        // TODO: enumを他のファイルにまとめる
-        public enum Scenes
-        {
-            Title,
-            Menu,
-            Battle01,
-
-        }
-
-        public enum RuleImage
-        {
-            none,
-            radial,
-            linear,
-            linear_invert,
-
-        }
-
         [SerializeField] FadeImage loadingScreen;
 
-        [SerializeField] Texture[] ruleImage;
+        [SerializeField] RuleImageList _ruleImage;
 
         private void Start()
         {
-            SceneManager.sceneLoaded += OnSceneLoaded;
+            //SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
@@ -55,12 +48,12 @@ namespace TowerDefenseRemake.Manager
         /// フェードアウト
         /// </summary>
         /// <param name="fadeout">ルール画像</param>
-        private async UniTask FadeOut(RuleImage fadeout)
+        private async UniTask FadeOut(RuleImageEnum fadeout)
         {
             // ローディング画面生成
             loadingScreen.gameObject.SetActive(true);
             // フェードアウトルール画像
-            loadingScreen.MaskTexture = ruleImage[(int)fadeout];
+            loadingScreen.MaskTexture = _ruleImage.Rules[(int)fadeout];
 
             // フェードアウトアニメーション
             await
@@ -77,10 +70,10 @@ namespace TowerDefenseRemake.Manager
         /// フェードイン
         /// </summary>
         /// <param name="fadein">ルール画像</param>
-        private async UniTask FadeIn(RuleImage fadein)
+        private async UniTask FadeIn(RuleImageEnum fadein)
         {
             // フェードインルール画像
-            loadingScreen.MaskTexture = ruleImage[(int)fadein];
+            loadingScreen.MaskTexture = _ruleImage.Rules[(int)fadein];
 
             // フェードインアニメーション
             await
@@ -101,7 +94,7 @@ namespace TowerDefenseRemake.Manager
         // -----------------------------------------------------------------------------------------------------
         // シーン遷移
         // -----------------------------------------------------------------------------------------------------
-        public async UniTask LoadingSceneWithLoading(RuleImage fadeout ,RuleImage fadein, Scenes scene, System.Func<UniTask> initialize)
+        public async UniTask LoadingSceneWithLoading(RuleImageEnum fadeout, RuleImageEnum fadein, SceneEnum scene, Func<UniTask> initialize)
         {
             // フェードアウト
             await FadeOut(fadeout);
@@ -109,7 +102,7 @@ namespace TowerDefenseRemake.Manager
             SceneManager.LoadSceneAsync(scene.ToString()).completed += async (AsyncOperation obj) =>
             {
                 // 初期化処理
-                if(initialize != null)
+                if (initialize != null)
                 {
                     await initialize();
                 }
